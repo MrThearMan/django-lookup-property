@@ -1,7 +1,7 @@
 import pytest
 
 from tests.example.models import Example
-from tests.factories import ExampleFactory, ThingFactory
+from tests.factories import ConcreteFactory, ExampleFactory, ThingFactory
 
 pytestmark = [
     pytest.mark.django_db,
@@ -42,3 +42,14 @@ def test_lookup_property__only():
     ExampleFactory.create()
     example = Example.objects.only("first_name").first()
     assert example.full_name == "foo bar"
+
+
+def test_lookup_property__defer():
+    ExampleFactory.create()
+    example = Example.objects.defer("first_name").first()
+    assert example.full_name == "foo bar"
+
+
+def test_lookup_property__abstract_and_concrete_models():
+    concrete = ConcreteFactory.create()
+    assert concrete.abstract_property == "abstract property"

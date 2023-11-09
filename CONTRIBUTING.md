@@ -110,7 +110,7 @@ You can also test your code in multiple environments with [tox]. To do this, you
 install python interpreters for all python version the library supports, then run
 `make tox`.
 
-Linting can be run on-demand with `make pre-commit`, or automatically before commits
+Linting can be run on-demand with `make lint`, or automatically before commits
 when installed with `make hook`
 
 ## Guidelines for writing code

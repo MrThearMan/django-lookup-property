@@ -12,11 +12,56 @@ def test_lookup_property__f_ref__source():
     )
 
 
-def test_lookup_property__combined_expression__source():
-    assert Example.combined_expression.func_source == cleandoc(
+def test_lookup_property__combined_expression_add__source():
+    assert Example.combined_expression_add.func_source == cleandoc(
         """
-        def combined_expression(self):
+        def combined_expression_add(self):
+            return self.age + 2
+        """,
+    )
+
+
+def test_lookup_property__combined_expression_div__source():
+    assert Example.combined_expression_div.func_source == cleandoc(
+        """
+        def combined_expression_div(self):
+            return self.age / 2
+        """,
+    )
+
+
+def test_lookup_property__combined_expression_mod__source():
+    assert Example.combined_expression_mod.func_source == cleandoc(
+        """
+        def combined_expression_mod(self):
+            return self.age % 2
+        """,
+    )
+
+
+def test_lookup_property__combined_expression_mult__source():
+    assert Example.combined_expression_mult.func_source == cleandoc(
+        """
+        def combined_expression_mult(self):
             return self.age * 2
+        """,
+    )
+
+
+def test_lookup_property__combined_expression_pow__source():
+    assert Example.combined_expression_pow.func_source == cleandoc(
+        """
+        def combined_expression_pow(self):
+            return self.age ** 2
+        """,
+    )
+
+
+def test_lookup_property__combined_expression_sub__source():
+    assert Example.combined_expression_sub.func_source == cleandoc(
+        """
+        def combined_expression_sub(self):
+            return self.age - 2
         """,
     )
 
@@ -87,11 +132,38 @@ def test_lookup_property__reverse_many_to_many__source():
     )
 
 
+def test_lookup_property__double_join__source():
+    assert Example.double_join.func_source == cleandoc(
+        """
+        def double_join(self):
+            return self.thing.far.pk
+        """,
+    )
+
+
 def test_lookup_property__q__source():
     assert Example.q.func_source == cleandoc(
         """
         def q(self):
             return self.first_name == 'foo'
+        """,
+    )
+
+
+def test_lookup_property__q_neg__source():
+    assert Example.q_neg.func_source == cleandoc(
+        """
+        def q_neg(self):
+            return not self.first_name == 'foo'
+        """,
+    )
+
+
+def test_lookup_property__q_empty__source():
+    assert Example.q_empty.func_source == cleandoc(
+        """
+        def q_empty(self):
+            return True
         """,
     )
 
@@ -143,11 +215,46 @@ def test_lookup_property__q_lt__source():
     )
 
 
-def test_lookup_property__q_in__source():
-    assert Example.q_in.func_source == cleandoc(
+def test_lookup_property__q_in_list__source():
+    assert Example.q_in_list.func_source == cleandoc(
         """
-        def q_in(self):
+        def q_in_list(self):
             return self.first_name in ['foo', 'bar']
+        """,
+    )
+
+
+def test_lookup_property__q_in_tuple__source():
+    assert Example.q_in_tuple.func_source == cleandoc(
+        """
+        def q_in_tuple(self):
+            return self.first_name in ('foo', 'bar')
+        """,
+    )
+
+
+def test_lookup_property__q_in_set__source():
+    assert Example.q_in_set.func_source in (
+        cleandoc(
+            """
+            def q_in_set(self):
+                return self.first_name in {'foo', 'bar'}
+            """,
+        ),
+        cleandoc(
+            """
+            def q_in_set(self):
+                return self.first_name in {'bar', 'foo'}
+            """,
+        ),
+    )
+
+
+def test_lookup_property__q_in_dict__source():
+    assert Example.q_in_dict.func_source == cleandoc(
+        """
+        def q_in_dict(self):
+            return self.first_name in {'foo': 'bar'}
         """,
     )
 

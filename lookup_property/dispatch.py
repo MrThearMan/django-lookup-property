@@ -12,15 +12,15 @@ P = ParamSpec("P")
 
 
 class RegisterFunc(Protocol[P, T, Str]):  # type: ignore[misc]
-    def __call__(self, *, lookup: Str) -> Callable[[Callable[P, T]], Callable[P, T]]:  # pragma: no cover
-        ...
+    def __call__(self, *, lookup: Str) -> Callable[[Callable[P, T]], Callable[P, T]]:
+        pass
 
 
 class Dispatch(Protocol[P, T, Str]):
     register: RegisterFunc[P, T, Str]
 
-    def __call__(self, lookup: Str, *args: P.args, **kwargs: P.kwargs) -> T:  # pragma: no cover
-        ...
+    def __call__(self, lookup: Str, *args: P.args, **kwargs: P.kwargs) -> T:
+        pass
 
 
 def lookup_singledispatch(func: Callable[Concatenate[Str, P], T]) -> Dispatch[P, T, Str]:
@@ -37,7 +37,7 @@ def lookup_singledispatch(func: Callable[Concatenate[Str, P], T]) -> Dispatch[P,
     def wrapper(lookup: Str, *args: P.args, **kwargs: P.kwargs) -> T:
         try:
             impl = registry[lookup]
-        except KeyError:  # pragma: no cover
+        except KeyError:
             return func(lookup, *args, **kwargs)
 
         return impl(*args, **kwargs)

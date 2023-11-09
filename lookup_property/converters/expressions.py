@@ -3,9 +3,9 @@ from functools import singledispatch
 
 from django.db import models
 from django.db.models.constants import LOOKUP_SEP
-from django.db.models.expressions import CombinedExpression
+from django.db.models.expressions import Combinable, CombinedExpression
 
-from ..typing import Any, State
+from ..typing import State
 from .utils import ast_function, ast_property
 
 __all__ = [
@@ -14,13 +14,7 @@ __all__ = [
 
 
 @singledispatch
-def expression_to_ast(expression: Any, state: State) -> ast.AST:  # pragma: no cover
-    msg = f"No implementation for expression '{expression}'."
-    raise ValueError(msg)
-
-
-@expression_to_ast.register
-def _(expression: object, state: State) -> ast.Call:
+def expression_to_ast(expression: object, state: State) -> ast.AST:
     """
     Default converter for all objects, which works by setting a new keyword argument:
 
@@ -43,7 +37,7 @@ def _(expression: None | str | int | float | bool | bytes, state: State) -> ast.
 
 
 @expression_to_ast.register
-def _(expression: list, state: State) -> ast.List:  # pragma: no cover
+def _(expression: list, state: State) -> ast.List:
     """Convert to lists: [..., ..., ...]"""
     return ast.List(
         elts=[expression_to_ast(value, state) for value in expression],
@@ -52,19 +46,19 @@ def _(expression: list, state: State) -> ast.List:  # pragma: no cover
 
 
 @expression_to_ast.register
-def _(expression: set, state: State) -> ast.Set:  # pragma: no cover
+def _(expression: set, state: State) -> ast.Set:
     """Convert to sets: {..., ..., ...}"""
     return ast.Set(elts=[expression_to_ast(value, state) for value in expression])
 
 
 @expression_to_ast.register
-def _(expression: tuple, state: State) -> ast.Tuple:  # pragma: no cover
+def _(expression: tuple, state: State) -> ast.Tuple:
     """Convert to tuples: (..., ..., ...)"""
     return ast.Tuple(elts=[expression_to_ast(value, state) for value in expression], ctx=ast.Load())
 
 
 @expression_to_ast.register
-def _(expression: dict, state: State) -> ast.Dict:  # pragma: no cover
+def _(expression: dict, state: State) -> ast.Dict:
     """Convert to dicts: {...: ..., ...: ...}"""
     return ast.Dict(
         keys=[expression_to_ast(key, state) for key in expression],
@@ -88,32 +82,17 @@ def _(expression: models.F, state: State) -> ast.Attribute:
 
 
 _BIN_OP_MAP: dict[str, ast.operator] = {
-    "+": ast.Add(),
-    "&": ast.BitAnd(),
-    "|": ast.BitOr(),
-    "^": ast.BitXor(),
-    "/": ast.Div(),
-    "//": ast.FloorDiv(),
-    "<<": ast.LShift(),
-    "%": ast.Mod(),
-    "*": ast.Mult(),
-    "@": ast.MatMult(),
-    "**": ast.Pow(),
-    ">>": ast.RShift(),
-    "-": ast.Sub(),
-}
-
-_COMP_OP_MAP: dict[str, ast.cmpop] = {  # type: ignore[assignment]
-    "=": ast.Eq(),
-    ">": ast.Gt(),
-    ">=": ast.GtE(),
-    "in": ast.In(),
-    "is": ast.Is(),
-    "is not": ast.IsNot(),
-    "<": ast.Lt(),
-    "<=": ast.LtE(),
-    "!=": ast.NotEq(),
-    "not in": ast.NotIn(),
+    Combinable.ADD: ast.Add(),
+    Combinable.BITAND: ast.BitAnd(),
+    Combinable.BITLEFTSHIFT: ast.LShift(),
+    Combinable.BITOR: ast.BitOr(),
+    Combinable.BITRIGHTSHIFT: ast.RShift(),
+    Combinable.BITXOR: ast.BitXor(),
+    Combinable.DIV: ast.Div(),
+    Combinable.MOD: ast.Mod(),
+    Combinable.MUL: ast.Mult(),
+    Combinable.POW: ast.Pow(),
+    Combinable.SUB: ast.Sub(),
 }
 
 
@@ -121,19 +100,15 @@ _COMP_OP_MAP: dict[str, ast.cmpop] = {  # type: ignore[assignment]
 def _(expression: CombinedExpression, state: State) -> ast.BinOp | ast.Compare:
     """
     F("foo") * F("bar") -> self.foo * self.bar
-    F("foo") + Value(2) -> self.foo + 2
+    F("foo") + 2 -> self.foo + 2
     """
     left = expression_to_ast(expression.lhs, state)
     right = expression_to_ast(expression.rhs, state)
 
     bin_op = _BIN_OP_MAP.get(expression.connector)
-    comp_op = _COMP_OP_MAP.get(expression.connector)
 
-    if bin_op is None and comp_op is None:  # pragma: no cover
+    if bin_op is None:  # pragma: no cover
         msg = f"No implementation for connector '{expression.connector}'."
         raise ValueError(msg)
 
-    if bin_op is not None:
-        return ast.BinOp(left=left, op=bin_op, right=right)
-
-    return ast.Compare(left=left, ops=[comp_op], comparators=[right])  # pragma: no cover
+    return ast.BinOp(left=left, op=bin_op, right=right)

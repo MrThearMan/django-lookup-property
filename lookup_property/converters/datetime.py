@@ -52,7 +52,7 @@ def _(expression: functions.Now, state: State) -> ast.Call:
 @expression_to_ast.register
 def _(expression: functions.Trunc, state: State) -> ast.AST:
     trunc = _LOOKUP_NAME_TO_TRUNC.get(expression.kind)
-    if trunc is None:  # pragma: no cover
+    if trunc is None:
         msg = f"No implementation for trunc expression '{expression.kind}'."
         raise ValueError(msg)
 
@@ -62,7 +62,7 @@ def _(expression: functions.Trunc, state: State) -> ast.AST:
 @expression_to_ast.register
 def _(expression: functions.Extract, state: State) -> ast.AST:
     extract = _LOOKUP_NAME_TO_EXTRACT.get(expression.lookup_name)
-    if extract is None:  # pragma: no cover
+    if extract is None:
         msg = f"No implementation for extract expression '{expression.lookup_name}'."
         raise ValueError(msg)
     return expression_to_ast(extract(expression.lhs), state=state)

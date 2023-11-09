@@ -25,8 +25,8 @@ def _(expression: models.Q, state: State) -> ast.Name | ast.BoolOp | ast.UnaryOp
     children: list[tuple[str, Any]] = expression.children  # type: ignore[assignment]
     comparison: ast.Name | ast.BoolOp | ast.AST
 
-    if not children:  # pragma: no cover
-        comparison = ast.Name(id="True", ctx=ast.Load())
+    if not children:
+        comparison = ast.Constant(value=True)
 
     elif len(children) == 1:
         comparison = to_lookup_comparison(attr=children[0][0], value=children[0][1], state=state)
@@ -80,7 +80,7 @@ def to_lookup_comparison(attr: str, value: Any, state: State) -> ast.AST:
 
 
 @lookup_singledispatch
-def lookup_to_ast(lookup: str, attrs: list[str], value: Any, state: State) -> ast.AST:  # pragma: no cover
+def lookup_to_ast(lookup: str, attrs: list[str], value: Any, state: State) -> ast.AST:
     msg = f"No implementation for '{lookup}' ({LOOKUP_SEP.join(attrs)}{LOOKUP_SEP}{lookup}={value!r})."
     raise ValueError(msg)
 
@@ -101,7 +101,7 @@ def _(attrs: list[str], value: Any, state: State) -> ast.Compare:
 @lookup_to_ast.register(lookup=lookups.IExact.lookup_name)
 def _(attrs: list[str], value: str | None, state: State) -> ast.AST | ast.Compare:
     """Q(foo__iexact="bar") -> self.foo.casefold() == "bar".casefold()"""
-    if value is None:  # pragma: no cover
+    if value is None:
         return lookup_to_ast("exact", attrs, value, state)
 
     return ast.Compare(

@@ -17,6 +17,11 @@ def test_lookup_property__q_neg():
     assert example.q_neg is False
 
 
+def test_lookup_property__q_empty():
+    example = ExampleFactory.create()
+    assert example.q_empty is True
+
+
 def test_lookup_property__q_exact():
     example = ExampleFactory.create()
     assert example.q_exact is True
@@ -24,7 +29,7 @@ def test_lookup_property__q_exact():
 
 def test_lookup_property__q_iexact():
     example = ExampleFactory.create()
-    assert example.q_iexact is True
+    assert example.q_iexact_null is False
 
 
 def test_lookup_property__q_gte():
@@ -47,9 +52,24 @@ def test_lookup_property__q_lt():
     assert example.q_lt is False
 
 
-def test_lookup_property__q_in():
+def test_lookup_property__q_in_list():
     example = ExampleFactory.create()
-    assert example.q_in is True
+    assert example.q_in_list is True
+
+
+def test_lookup_property__q_in_tuple():
+    example = ExampleFactory.create()
+    assert example.q_in_tuple is True
+
+
+def test_lookup_property__q_in_set():
+    example = ExampleFactory.create()
+    assert example.q_in_set is True
+
+
+def test_lookup_property__q_in_dict():
+    example = ExampleFactory.create()
+    assert example.q_in_dict is True
 
 
 def test_lookup_property__q_contains():

@@ -27,11 +27,11 @@ __all__ = [
 
 
 class LookupPropertyCol(models.Expression):
-    def __init__(self, target: LookupPropertyField) -> None:
-        self.target = target
+    def __init__(self, target_field: LookupPropertyField) -> None:
+        self.target = target_field
         super().__init__()
 
-    def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.target!r})"
 
     @property
@@ -59,8 +59,8 @@ class LookupPropertyCol(models.Expression):
     def get_lookup(self, name: str) -> type[Lookup] | None:
         return self.target.get_lookup(name)
 
-    def get_transform(self, name: str) -> type[Transform] | None:  # pragma: no cover
-        return self.target.get_transform(name)
+    def get_transform(self, name: str) -> type[Transform] | None:
+        return self.target.get_transform(name)  # pragma: no cover
 
     def _resolve_joined_lookup(self, query: sql.Query) -> Expr:
         try:
@@ -85,10 +85,6 @@ class LookupPropertyCol(models.Expression):
             return vendor_impl(compiler, connection)  # type: ignore[no-any-return]
 
         return resolved.as_sql(compiler, connection)
-
-    def get_db_converters(self, connection: BaseDatabaseWrapper) -> list[ConvertFunc]:
-        converters: list[ConvertFunc] = [] if self.convert_value is self._convert_value_noop else [self.convert_value]
-        return converters + self.output_field.get_db_converters(connection)
 
     @cached_property
     def convert_value(self) -> ConvertFunc:

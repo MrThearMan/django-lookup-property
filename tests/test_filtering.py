@@ -1,5 +1,6 @@
 import pytest
 from django.db import models
+from django.db.models.functions import Lower, Upper
 
 from tests.example.models import Example, Other, Part, Thing
 from tests.factories import ExampleFactory, OtherFactory, PartFactory, ThingFactory
@@ -43,6 +44,12 @@ def test_filter_by_lookup_property__with_lookup_expression():
     ExampleFactory.create()
     assert Example.objects.filter(full_name__contains="foo").count() == 1
     assert Example.objects.filter(full_name__contains="fizz").count() == 0
+
+
+def test_filter_by_lookup_property__with_transform_expression():
+    ExampleFactory.create()
+    assert Example.objects.filter(full_name=Upper("full_name")).count() == 0
+    assert Example.objects.filter(full_name=Lower("full_name")).count() == 1
 
 
 def test_filter_by_lookup_property__subquery():

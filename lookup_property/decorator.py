@@ -24,13 +24,16 @@ class lookup_property:  # noqa: N801
 
     @overload
     def __init__(self, arg: FunctionType) -> None:
-        """Called when using '@lookup_property' without calling it."""
+        """When using '@lookup_property'."""
 
     @overload
     def __init__(self, arg: State) -> None:
-        """Called when using '@lookup_property(state=State(...))' to set initial state."""
+        """When using '@lookup_property(state=State(...))' to set initial state."""
 
     def __init__(self, arg: FunctionType | State) -> None:
+        # Set in `LookupPropertyField`
+        self.field: LookupPropertyField = None  # type: ignore[assignment]
+
         if not hasattr(self, "state"):
             self.state = arg if isinstance(arg, State) else State()
 
@@ -52,7 +55,7 @@ class lookup_property:  # noqa: N801
         self.__init__(func)
         return self
 
-    def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.expression})"
 
     def __get__(self, instance: models.Model | None, _) -> Any:  # noqa: ANN001
@@ -75,7 +78,7 @@ class lookup_property:  # noqa: N801
         private_only: bool = False,  # noqa: FBT001, FBT002, ARG002
     ) -> None:
         # Called by `django.db.models.base.ModelBase.add_to_class`
-        field = LookupPropertyField(cls, self.expression)
+        field = LookupPropertyField(cls, target_property=self)
         field.set_attributes_from_name(name)
         cls._meta.add_field(field, private=True)
         setattr(cls, field.attname, self)

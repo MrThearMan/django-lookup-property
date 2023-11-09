@@ -40,7 +40,7 @@ def _(expression: models.ExpressionWrapper, state: State) -> ast.Call:
 
 
 @singledispatch
-def convert_django_field(field: models.Field, state: State) -> ast.Name | ast.Attribute:  # pragma: no cover
+def convert_django_field(field: models.Field, state: State) -> ast.Name | ast.Attribute:
     msg = f"No implementation for field '{field.__class__.__name__}'."
     raise ValueError(msg)
 

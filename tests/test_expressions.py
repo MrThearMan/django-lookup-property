@@ -12,9 +12,34 @@ def test_lookup_property__f_ref():
     assert example.f_ref == "foo"
 
 
-def test_lookup_property__combined_expression():
+def test_lookup_property__combined_expression_add():
     example = ExampleFactory.create()
-    assert example.combined_expression == 36
+    assert example.combined_expression_add == 20
+
+
+def test_lookup_property__combined_expression_div():
+    example = ExampleFactory.create()
+    assert example.combined_expression_div == 9
+
+
+def test_lookup_property__combined_expression_mod():
+    example = ExampleFactory.create()
+    assert example.combined_expression_mod == 0
+
+
+def test_lookup_property__combined_expression_mult():
+    example = ExampleFactory.create()
+    assert example.combined_expression_mult == 36
+
+
+def test_lookup_property__combined_expression_pow():
+    example = ExampleFactory.create()
+    assert example.combined_expression_pow == 324
+
+
+def test_lookup_property__combined_expression_sub():
+    example = ExampleFactory.create()
+    assert example.combined_expression_sub == 16
 
 
 def test_lookup_property__expression_wrapper():

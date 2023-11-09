@@ -48,8 +48,28 @@ class Example(models.Model):
         return models.F("first_name")
 
     @lookup_property
-    def combined_expression(self):
+    def combined_expression_add(self):
+        return models.F("age") + 2
+
+    @lookup_property
+    def combined_expression_div(self):
+        return models.F("age") / 2
+
+    @lookup_property
+    def combined_expression_mod(self):
+        return models.F("age") % 2
+
+    @lookup_property
+    def combined_expression_mult(self):
         return models.F("age") * 2
+
+    @lookup_property
+    def combined_expression_pow(self):
+        return models.F("age") ** 2
+
+    @lookup_property
+    def combined_expression_sub(self):
+        return models.F("age") - 2
 
     @lookup_property
     def expression_wrapper(self):
@@ -58,19 +78,19 @@ class Example(models.Model):
             output_field=models.CharField(),
         )
 
-    @lookup_property
+    @lookup_property(State(joins=True))
     def forward_one_to_one(self):
         return models.F("question__pk")
 
-    @lookup_property
+    @lookup_property(State(joins=True))
     def reverse_one_to_one(self):
         return models.F("thing__pk")
 
-    @lookup_property
+    @lookup_property(State(joins=True))
     def forward_many_to_one(self):
         return models.F("other__pk")
 
-    @lookup_property
+    @lookup_property(State(joins=True))
     def reverse_one_to_many(self):
         return models.F("totals__pk")
 
@@ -78,7 +98,7 @@ class Example(models.Model):
     def _(self):
         return self.totals.values_list("pk", flat=True).first()
 
-    @lookup_property
+    @lookup_property(State(joins=True))
     def forward_many_to_many(self):
         return models.F("children__pk")
 
@@ -86,13 +106,17 @@ class Example(models.Model):
     def _(self):
         return self.children.values_list("pk", flat=True).first()
 
-    @lookup_property
+    @lookup_property(State(joins=True))
     def reverse_many_to_many(self):
         return models.F("parts__pk")
 
     @reverse_many_to_many.override
     def _(self):
         return self.parts.values_list("pk", flat=True).first()
+
+    @lookup_property(State(joins=True))
+    def double_join(self):
+        return models.F("thing__far__pk")
 
     @lookup_property
     def now(self):
@@ -516,12 +540,20 @@ class Example(models.Model):
         return ~models.Q(first_name="foo")
 
     @lookup_property
+    def q_empty(self):
+        return models.Q()
+
+    @lookup_property
     def q_exact(self):
         return models.Q(first_name__exact="foo")
 
     @lookup_property
     def q_iexact(self):
         return models.Q(first_name__iexact="FOO")
+
+    @lookup_property
+    def q_iexact_null(self):
+        return models.Q(first_name__iexact=None)
 
     @lookup_property
     def q_gte(self):
@@ -540,8 +572,20 @@ class Example(models.Model):
         return models.Q(timestamp__lt=datetime.datetime(2022, 1, 1, tzinfo=datetime.UTC))
 
     @lookup_property
-    def q_in(self):
+    def q_in_list(self):
         return models.Q(first_name__in=["foo", "bar"])
+
+    @lookup_property
+    def q_in_tuple(self):
+        return models.Q(first_name__in=("foo", "bar"))
+
+    @lookup_property
+    def q_in_set(self):
+        return models.Q(first_name__in={"foo", "bar"})
+
+    @lookup_property
+    def q_in_dict(self):
+        return models.Q(first_name__in={"foo": "bar"})
 
     @lookup_property
     def q_contains(self):
@@ -633,16 +677,38 @@ class Example(models.Model):
     #     return aggregates.Sum("number", filter=models.Q(number__lte=3))
 
 
+class Far(models.Model):
+    name = models.CharField(max_length=256)
+
+
 class Thing(models.Model):
     name = models.CharField(max_length=256)
     example = models.OneToOneField(Example, on_delete=models.CASCADE, related_name="thing")
+    far = models.OneToOneField(Far, on_delete=models.CASCADE, related_name="thing")
 
 
 class Total(models.Model):
     name = models.CharField(max_length=256)
     example = models.ForeignKey(Example, on_delete=models.CASCADE, related_name="totals")
+    far = models.OneToOneField(Far, on_delete=models.CASCADE, related_name="total")
 
 
 class Part(models.Model):
     name = models.CharField(max_length=256)
     examples = models.ManyToManyField(Example, related_name="parts")
+    far = models.OneToOneField(Far, on_delete=models.CASCADE, related_name="part")
+
+
+class Abstract(models.Model):
+    abstract_field = models.CharField(max_length=256)
+
+    @lookup_property
+    def abstract_property(self):
+        return models.F("abstract_field")
+
+    class Meta:
+        abstract = True
+
+
+class Concrete(Abstract):
+    concrete_field = models.CharField(max_length=256)

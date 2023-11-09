@@ -4,12 +4,13 @@ import factory
 from factory.django import DjangoModelFactory
 
 from lookup_property.typing import Any, Iterable
-from tests.example.models import Child, Example, Other, Part, Question, Thing, Total
-from tests.shared.models import Address, Person
+from tests.example.models import Child, Concrete, Example, Far, Other, Part, Question, Thing, Total
 
 __all__ = [
     "ChildFactory",
+    "ConcreteFactory",
     "ExampleFactory",
+    "FarFactory",
     "PartFactory",
     "QuestionFactory",
     "ThingFactory",
@@ -60,9 +61,7 @@ class ExampleFactory(DjangoModelFactory):
         model = Example
 
     @factory.post_generation
-    def children(
-        self, create: bool, items: Iterable[Child] | None, **kwargs: Any
-    ) -> None:
+    def children(self, create: bool, items: Iterable[Child] | None, **kwargs: Any) -> None:
         if not create:
             return
 
@@ -77,9 +76,21 @@ class ExampleFactory(DjangoModelFactory):
         return super().create(**kwargs)
 
 
+class FarFactory(DjangoModelFactory):
+    name = "foo"
+
+    class Meta:
+        model = Far
+
+    @classmethod
+    def create(cls, **kwargs: Any) -> Far:
+        return super().create(**kwargs)
+
+
 class ThingFactory(DjangoModelFactory):
     name = "foo"
     example = factory.SubFactory(ExampleFactory)
+    far = factory.SubFactory(FarFactory)
 
     class Meta:
         model = Thing
@@ -92,6 +103,7 @@ class ThingFactory(DjangoModelFactory):
 class TotalFactory(DjangoModelFactory):
     name = "foo"
     example = factory.SubFactory(ExampleFactory)
+    far = factory.SubFactory(FarFactory)
 
     class Meta:
         model = Total
@@ -103,14 +115,13 @@ class TotalFactory(DjangoModelFactory):
 
 class PartFactory(DjangoModelFactory):
     name = "foo"
+    far = factory.SubFactory(FarFactory)
 
     class Meta:
         model = Part
 
     @factory.post_generation
-    def examples(
-        self, create: bool, items: Iterable[Example] | None, **kwargs: Any
-    ) -> None:
+    def examples(self, create: bool, items: Iterable[Example] | None, **kwargs: Any) -> None:
         if not create:
             return
 
@@ -125,24 +136,13 @@ class PartFactory(DjangoModelFactory):
         return super().create(**kwargs)
 
 
-class PersonFactory(DjangoModelFactory):
-    first_name = "foo"
-    last_name = "bar"
+class ConcreteFactory(DjangoModelFactory):
+    abstract_field = "abstract property"
+    concrete_field = "concrete property"
 
     class Meta:
-        model = Person
+        model = Concrete
 
     @classmethod
-    def create(cls, **kwargs: Any) -> Person:
-        return super().create(**kwargs)
-
-
-class AddressFactory(DjangoModelFactory):
-    person = factory.SubFactory(PersonFactory)
-
-    class Meta:
-        model = Address
-
-    @classmethod
-    def create(cls, **kwargs: Any) -> Address:
+    def create(cls, **kwargs: Any) -> Concrete:
         return super().create(**kwargs)

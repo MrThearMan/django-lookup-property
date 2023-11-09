@@ -34,7 +34,7 @@ ModelMethod = Callable[[TModel], Expr]
 ConvertFunc = Callable[[Any, BaseExpression, BaseDatabaseWrapper], Any]
 
 
-def random_arg_name() -> str:  # pragma: no cover
+def random_arg_name() -> str:
     return "".join(random.choices(string.ascii_lowercase, k=20))
 
 
@@ -54,3 +54,4 @@ class State:
     use_tz: bool = field(default_factory=lambda: settings.USE_TZ)
     extra_kwargs: RandomKeyDict[str, Any] = field(default_factory=RandomKeyDict)
     aggregate_is_to_many: bool = True
+    joins: bool = False
