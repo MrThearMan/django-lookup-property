@@ -721,10 +721,7 @@ def test_lookup_property__case__source():
     assert Example.case.func_source == cleandoc(
         """
         def case(self):
-            if self.first_name == 'foo':
-                return 1
-            else:
-                return 2
+            return 1 if self.first_name == 'foo' else 2
         """,
     )
 
@@ -733,29 +730,17 @@ def test_lookup_property__case_2__source():
     assert Example.case_2.func_source == cleandoc(
         """
         def case_2(self):
-            if self.first_name == 'fizz':
-                return 1
-            elif self.last_name == 'bar':
-                return 2
-            else:
-                return 3
+            return 1 if self.first_name == 'fizz' else 2 if self.last_name == 'bar' else 3
         """,
     )
 
 
 def test_lookup_property__case_3__source():
+    cond_1 = "(11 if self.last_name == 'bar' else 22)"
     assert Example.case_3.func_source == cleandoc(
-        """
+        f"""
         def case_3(self):
-            if self.first_name == 'foo':
-                if self.last_name == 'bar':
-                    return 11
-                else:
-                    return 22
-            elif self.last_name == 'bar':
-                return 1
-            else:
-                return 2
+            return {cond_1} if self.first_name == 'foo' else 1 if self.last_name == 'bar' else 2
         """,
     )
 
@@ -827,29 +812,21 @@ def test_lookup_property__cast_json__source():
 
 
 def test_lookup_property__coalesce__source():
+    cond_1 = "self.first_name if self.first_name is not None"
     assert Example.coalesce.func_source == cleandoc(
-        """
+        f"""
         def coalesce(self):
-            if self.first_name is not None:
-                return self.first_name
-            elif self.last_name is not None:
-                return self.last_name
-            else:
-                return None
+            return {cond_1} else self.last_name if self.last_name is not None else None
         """,
     )
 
 
 def test_lookup_property__coalesce_2__source():
+    full_name = "self.first_name + self.last_name"
     assert Example.coalesce_2.func_source == cleandoc(
-        """
+        f"""
         def coalesce_2(self):
-            if self.first_name + self.last_name is not None:
-                return self.first_name + self.last_name
-            elif '.' is not None:
-                return '.'
-            else:
-                return None
+            return {full_name} if {full_name} is not None else '.' if '.' is not None else None
         """,
     )
 

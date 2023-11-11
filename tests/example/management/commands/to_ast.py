@@ -23,6 +23,7 @@ to_convert = (
     ast.USub,
     ast.UnaryOp,
     ast.Set,
+    ast.IfExp,
 )
 to_remove = [
     "lineno",
@@ -81,10 +82,7 @@ def print_str_as_ast(input_string: str) -> None:
 if __name__ == "__main__":
     string = cleandoc(
         """
-        try:
-            return foo
-        except Exception:
-            return 0
+        "foo" if True else "bar" if True else "baz"
         """
     )
     print_str_as_ast(string)

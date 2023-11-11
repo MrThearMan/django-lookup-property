@@ -1,4 +1,4 @@
-export PYTHONWARNINGS=ignore
+export DJANGO_SETTINGS_MODULE=tests.project.settings
 
 .PHONY: help
 .PHONY: dev
