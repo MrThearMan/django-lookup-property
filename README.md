@@ -23,7 +23,29 @@ pip install django-lookup-property
 
 ---
 
-Django model properties that are also lookup expressions!
+Django model properties that are also lookup expressions.
+
+```python
+from lookup_property import lookup_property
+from django.db import models
+from django.db.models import Value
+from django.db.models.functions import Concat
+
+class Person(models.Model):
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+
+    @lookup_property
+    def full_name(self):
+        return Concat("first_name", Value(" "), "last_name")
+
+# -------------------------------------------------------------
+
+>>> Person.objects.create(first_name="John", last_name="Doe")
+>>> person = Person.objects.filter(full_name="John Doe").first()
+>>> person.full_name
+'John Doe'
+```
 
 [coverage-badge]: https://coveralls.io/repos/github/MrThearMan/django-lookup-property/badge.svg?branch=main
 [status-badge]: https://img.shields.io/github/actions/workflow/status/MrThearMan/django-lookup-property/test.yml?branch=main

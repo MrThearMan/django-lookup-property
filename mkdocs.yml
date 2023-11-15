@@ -2,6 +2,8 @@ site_name: Django Lookup Property
 
 nav:
   - Home: index.md
+  - Usage: usage.md
+  - Converters: converters.md
 
 theme:
   name: readthedocs
