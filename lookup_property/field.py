@@ -79,11 +79,12 @@ class LazyPathInfo:
 
     @cached_property
     def get_path_info(self) -> list[PathInfo]:
-        parts: list[str] = self.field.expression.name.split(LOOKUP_SEP)
-        rel_or_field: ForeignObjectRel | ForeignObject | ManyToManyField = self.field.model._meta.get_field(parts[0])
+        parts: list[str] = self.field.expression.name.split(LOOKUP_SEP)  # type: ignore[union-attr]
+        rel_or_field: ForeignObjectRel | ForeignObject | ManyToManyField
+        rel_or_field = self.field.model._meta.get_field(parts[0])  # type: ignore[assignment]
 
         # Forward relation
         if isinstance(rel_or_field, ForeignObjectRel):
-            return rel_or_field.field.get_reverse_path_info()
+            return rel_or_field.field.get_reverse_path_info()  # type: ignore[no-any-return,attr-defined]
         # Reverse relation
-        return rel_or_field.get_path_info()
+        return rel_or_field.get_path_info()  # type: ignore[union-attr]

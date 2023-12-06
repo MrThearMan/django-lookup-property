@@ -3,7 +3,7 @@ import ast
 from django.db.models import functions
 from django.db.models.functions.datetime import TruncBase
 
-from ..typing import Expr, State
+from ..typing import State
 from .expressions import expression_to_ast
 from .utils import ast_attribute, ast_function
 
@@ -41,7 +41,7 @@ def _(expression: functions.Now, state: State) -> ast.Call:
     Now() -> datetime.datetime.now(tz=datetime.timezone.utc) (if `settings.USE_TZ=True`)
     """
     state.imports.add("datetime")
-    kwargs: dict[str, Expr] = {}
+    kwargs: dict[str, ast.Attribute] = {}
 
     if state.use_tz:
         kwargs["tz"] = ast_attribute("datetime", "timezone", "utc")

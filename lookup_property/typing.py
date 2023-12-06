@@ -2,7 +2,7 @@ import random
 import string
 from dataclasses import dataclass, field
 from types import FunctionType
-from typing import Any, Callable, Concatenate, Iterable, Literal, ParamSpec, Protocol, Self, TypeVar, cast
+from typing import Any, Callable, Collection, Concatenate, Iterable, Literal, ParamSpec, Protocol, Self, TypeVar, cast
 
 from django.conf import settings
 from django.db import models
@@ -12,6 +12,7 @@ from django.db.models.expressions import BaseExpression
 __all__ = [
     "Any",
     "Callable",
+    "Collection",
     "cast",
     "Concatenate",
     "ConvertFunc",
@@ -38,7 +39,7 @@ def random_arg_name() -> str:
     return "".join(random.choices(string.ascii_lowercase, k=20))
 
 
-class RandomKeyDict(dict):
+class RandomKeyDict(dict[str, Any]):
     """Custom dict for adding items with random keys."""
 
     def add(self, item: Any) -> str:
@@ -52,5 +53,5 @@ class RandomKeyDict(dict):
 class State:
     imports: set[str] = field(default_factory=set)
     use_tz: bool = field(default_factory=lambda: settings.USE_TZ)
-    extra_kwargs: RandomKeyDict[str, Any] = field(default_factory=RandomKeyDict)
+    extra_kwargs: RandomKeyDict = field(default_factory=RandomKeyDict)
     joins: bool = False

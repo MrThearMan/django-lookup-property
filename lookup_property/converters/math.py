@@ -1,7 +1,7 @@
 import ast
 
 from django.db.models import functions
-from django.db.models.functions import Random
+from django.db.models.functions.math import Random  # type: ignore[attr-defined]
 
 from ..typing import Expr, State
 from .expressions import expression_to_ast

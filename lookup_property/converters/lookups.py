@@ -202,7 +202,7 @@ def _(attrs: list[str], value: str, state: State) -> ast.Compare:
 @lookup_to_ast.register(lookup=lookups.StartsWith.lookup_name)
 def _(attrs: list[str], value: str, state: State) -> ast.Call:
     """Q(foo__startswith="bar") -> self.foo.startswith("bar")"""
-    return ast_method("startswith", attrs, expression_to_ast(value, state))
+    return ast_method("startswith", attrs, expression_to_ast(value, state))  # type: ignore[arg-type]
 
 
 @lookup_to_ast.register(lookup=lookups.IStartsWith.lookup_name)
@@ -232,7 +232,7 @@ def _(attrs: list[str], value: str, state: State) -> ast.Call:
 @lookup_to_ast.register(lookup=lookups.EndsWith.lookup_name)
 def _(attrs: list[str], value: str, state: State) -> ast.Call:
     """Q(foo__endswith="bar") -> self.foo.endswith("bar")"""
-    return ast_method("endswith", attrs, expression_to_ast(value, state))
+    return ast_method("endswith", attrs, expression_to_ast(value, state))  # type: ignore[arg-type]
 
 
 @lookup_to_ast.register(lookup=lookups.IEndsWith.lookup_name)

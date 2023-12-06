@@ -64,12 +64,12 @@ class LookupPropertyCol(models.Expression):
 
     def _resolve_joined_lookup(self, query: sql.Query) -> Expr:
         try:
-            join: Join = query.alias_map[self.model._meta.db_table]
+            join: Join = query.alias_map[self.model._meta.db_table]  # type: ignore[assignment]
         except KeyError:
             # Lookup property is referenced with an OuterRef in a Subquery.
             return self.resolved_target_expression  # type: ignore[return-value]
 
-        return reverse_expression(self.expression, join.join_field.name)  # type: ignore[union-attr]
+        return reverse_expression(self.expression, join.join_field.name)  # type: ignore[union-attr,attr-defined]
 
     def as_sql(self, compiler: SQLCompiler, connection: BaseDatabaseWrapper) -> tuple[str, list[Any]]:
         expression: Expr = self.expression
@@ -99,7 +99,7 @@ def expression_has_output_field(expression: Expr) -> bool:  # pragma: no cover
     # is not explicitly given (e.g. 'Trunc(F("foo"))' will end up using 'BaseExpression.output_field',
     # which then uses 'BaseExpression.get_source_fields' while F does not have an '_output_field_or_none').
     with suppress(AttributeError):
-        return expression.output_field is not None
+        return expression.output_field is not None  # type: ignore[union-attr]
     return False
 
 

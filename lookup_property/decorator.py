@@ -30,7 +30,7 @@ class lookup_property:  # noqa: N801
     def __init__(self, *, joins: bool = ..., use_tz: bool = ...) -> None:
         """When using '@lookup_property(...)' to set initial state."""
 
-    def __init__(self, func: FunctionType | None = None, /, **kwargs: Any) -> None:
+    def __init__(self, func: FunctionType | None = None, /, **kwargs: Any) -> None:  # type: ignore[misc]
         # Set in `LookupPropertyField`
         self.field: LookupPropertyField = None  # type: ignore[assignment]
 
@@ -52,7 +52,7 @@ class lookup_property:  # noqa: N801
             )
 
     def __call__(self, func: FunctionType) -> Self:
-        self.__init__(func)
+        self.__init__(func)  # type: ignore[misc]
         return self
 
     def __repr__(self) -> str:

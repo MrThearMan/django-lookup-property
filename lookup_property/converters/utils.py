@@ -1,6 +1,6 @@
 import ast
 
-from ..typing import Expr
+from ..typing import Iterable
 
 __all__ = [
     "ast_attribute",
@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 
-def ast_function(func_name: str, attrs: list[str] = (), *args: Expr, **kwargs: Expr) -> ast.Call:
+def ast_function(func_name: str, attrs: Iterable[str] = (), *args: ast.AST, **kwargs: ast.AST) -> ast.Call:
     """
     Transform given attributes and function name to a function call ast node.
 
@@ -40,10 +40,10 @@ def ast_attribute(*attrs: str) -> ast.Attribute:
             value = ast.Name(id=name, ctx=ast.Load())
             continue
         value = ast.Attribute(value=value, attr=name, ctx=ast.Load())
-    return value
+    return value  # type: ignore[return-value]
 
 
-def ast_method(func_name: str, attrs: list[str] = (), *args: Expr, **kwargs: Expr) -> ast.Call:
+def ast_method(func_name: str, attrs: Iterable[str] = (), *args: ast.AST, **kwargs: ast.AST) -> ast.Call:
     """
     Transform given attributes and function name to a class instance method ast node.
 
@@ -53,8 +53,7 @@ def ast_method(func_name: str, attrs: list[str] = (), *args: Expr, **kwargs: Exp
     (func=foo, attrs=["bar"], Expr) -> self.bar.foo(Expr)
     (func=foo, attrs=["bar"], fizz=Expr) -> self.bar.foo(fizz=Expr)
     """
-    attrs.insert(0, "self")
-    return ast_function(func_name, attrs, *args, **kwargs)
+    return ast_function(func_name, ("self", *attrs), *args, **kwargs)
 
 
 def ast_property(*attrs: str) -> ast.Attribute:
