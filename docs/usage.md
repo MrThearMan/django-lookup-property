@@ -75,13 +75,13 @@ work normally, reverse relations and many-to-many relations require some hinting
 for joins to work properly in some cases (e.g. `QuerySet.count()`):
 
 ```python
-from lookup_property import lookup_property, State
+from lookup_property import lookup_property
 from django.db import models
 
 class Person(models.Model):
     ...
 
-    @lookup_property(State(joins=True))  # hint that expression contains joins
+    @lookup_property(joins=True)  # hint that expression contains joins
     def primary_address(self):
         return (
             models.F("addresses__street")
@@ -128,13 +128,13 @@ This isn't right, since `self.addresses` is a `RelatedManager` for a one-to-many
 relation. In this case, we can declare an explicit override for the generated function:
 
 ```python
-from lookup_property import lookup_property, State
+from lookup_property import lookup_property
 from django.db import models
 
 class Person(models.Model):
     ...
 
-    @lookup_property(State(joins=True))
+    @lookup_property(joins=True)
     def primary_address(self):
         return ...
 
