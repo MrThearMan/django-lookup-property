@@ -4,7 +4,7 @@ import factory
 from factory.django import DjangoModelFactory
 
 from lookup_property.typing import Any, Iterable
-from tests.example.models import Child, Concrete, Example, Far, Other, Part, Question, Thing, Total
+from tests.example.models import AnotherConcrete, Child, Concrete, Example, Far, Other, Part, Question, Thing, Total
 
 __all__ = [
     "ChildFactory",
@@ -78,6 +78,7 @@ class ExampleFactory(DjangoModelFactory):
 
 class FarFactory(DjangoModelFactory):
     name = "foo"
+    number = 12
 
     class Meta:
         model = Far
@@ -89,6 +90,7 @@ class FarFactory(DjangoModelFactory):
 
 class ThingFactory(DjangoModelFactory):
     name = "foo"
+    number = 12
     example = factory.SubFactory(ExampleFactory)
     far = factory.SubFactory(FarFactory)
 
@@ -102,6 +104,7 @@ class ThingFactory(DjangoModelFactory):
 
 class TotalFactory(DjangoModelFactory):
     name = "foo"
+    number = 12
     example = factory.SubFactory(ExampleFactory)
     far = factory.SubFactory(FarFactory)
 
@@ -115,6 +118,7 @@ class TotalFactory(DjangoModelFactory):
 
 class PartFactory(DjangoModelFactory):
     name = "foo"
+    number = 12
     far = factory.SubFactory(FarFactory)
 
     class Meta:
@@ -145,4 +149,17 @@ class ConcreteFactory(DjangoModelFactory):
 
     @classmethod
     def create(cls, **kwargs: Any) -> Concrete:
+        return super().create(**kwargs)
+
+
+class AnotherConcreteFactory(DjangoModelFactory):
+    abstract_field = "abstract property"
+    another_abstract_field = "another abstract property"
+    another_concrete_field = "another concrete property"
+
+    class Meta:
+        model = AnotherConcrete
+
+    @classmethod
+    def create(cls, **kwargs: Any) -> AnotherConcrete:
         return super().create(**kwargs)

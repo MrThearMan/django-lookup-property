@@ -75,14 +75,14 @@ def print_str_as_ast(input_string: str) -> None:
     print("----------------------------------")
     print(ast.unparse(source))
     print("----------------------------------")
-    print(json.dumps(data, indent=2))
+    print(json.dumps(data, indent=2, sort_keys=True, default=str))
     print("----------------------------------")
 
 
 if __name__ == "__main__":
     string = cleandoc(
         """
-        "foo" if True else "bar" if True else "baz"
+        self.__class__.objects.aggregate(random_string=random_string())["random_string"]
         """
     )
     print_str_as_ast(string)

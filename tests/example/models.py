@@ -1,11 +1,10 @@
 import datetime
 
 from django.db import models
-from django.db.models import functions
+from django.db.models import aggregates, functions
 from django.db.models.functions import MD5, Random
 
 from lookup_property import lookup_property
-from lookup_property.typing import State
 
 
 class Other(models.Model):
@@ -30,7 +29,7 @@ class Example(models.Model):
     question = models.OneToOneField(Question, on_delete=models.CASCADE, related_name="example")
     children = models.ManyToManyField(Child, related_name="examples")
 
-    @lookup_property(State())
+    @lookup_property()
     def full_name(self):
         return functions.Concat(
             models.F("first_name"),
@@ -78,19 +77,19 @@ class Example(models.Model):
             output_field=models.CharField(),
         )
 
-    @lookup_property(State(joins=True))
+    @lookup_property(joins=True)
     def forward_one_to_one(self):
         return models.F("question__pk")
 
-    @lookup_property(State(joins=True))
+    @lookup_property(joins=True)
     def reverse_one_to_one(self):
         return models.F("thing__pk")
 
-    @lookup_property(State(joins=True))
+    @lookup_property(joins=True)
     def forward_many_to_one(self):
         return models.F("other__pk")
 
-    @lookup_property(State(joins=True))
+    @lookup_property(joins=True)
     def reverse_one_to_many(self):
         return models.F("totals__pk")
 
@@ -98,7 +97,7 @@ class Example(models.Model):
     def _(self):
         return self.totals.values_list("pk", flat=True).first()
 
-    @lookup_property(State(joins=True))
+    @lookup_property(joins=True)
     def forward_many_to_many(self):
         return models.F("children__pk")
 
@@ -106,7 +105,7 @@ class Example(models.Model):
     def _(self):
         return self.children.values_list("pk", flat=True).first()
 
-    @lookup_property(State(joins=True))
+    @lookup_property(joins=True)
     def reverse_many_to_many(self):
         return models.F("parts__pk")
 
@@ -114,7 +113,7 @@ class Example(models.Model):
     def _(self):
         return self.parts.values_list("pk", flat=True).first()
 
-    @lookup_property(State(joins=True))
+    @lookup_property(joins=True)
     def double_join(self):
         return models.F("thing__far__pk")
 
@@ -644,57 +643,85 @@ class Example(models.Model):
     def q_xor(self):
         return models.Q(first_name="foo") ^ models.Q(last_name="bar")
 
-    # @lookup_property
-    # def count_field(self):
-    #     return aggregates.Count("*")
-    #
-    # @lookup_property(State(aggregate_is_to_many=False))
-    # def count_field_filter(self):
-    #     return aggregates.Count("pk", filter=models.Q(number__lte=10))
-    #
-    # @lookup_property(State(aggregate_is_to_many=True))
-    # def count_rel(self):
-    #     return aggregates.Count("totals")
-    #
-    # @lookup_property(State(aggregate_is_to_many=True))
-    # def count_rel_filter(self):
-    #     return aggregates.Count("totals", filter=models.Q(totals__pk__gt=5))
-    #
-    # @lookup_property(State(aggregate_is_to_many=False))
-    # def max_(self):
-    #     return aggregates.Max("number")
-    #
-    # @lookup_property(State(aggregate_is_to_many=False))
-    # def min_(self):
-    #     return aggregates.Min("number")
-    #
-    # @lookup_property(State(aggregate_is_to_many=False))
-    # def sum_(self):
-    #     return aggregates.Sum("number")
-    #
-    # @lookup_property(State(aggregate_is_to_many=False))
-    # def sum_filter(self):
-    #     return aggregates.Sum("number", filter=models.Q(number__lte=3))
+    @lookup_property
+    def count_field(self):
+        return aggregates.Count("*")
+
+    @lookup_property
+    def count_field_filter(self):
+        return aggregates.Count("pk", filter=models.Q(number__lte=10))
+
+    @lookup_property
+    def count_rel(self):
+        return aggregates.Count("totals__pk")
+
+    @lookup_property
+    def count_rel_filter(self):
+        return aggregates.Count("totals", filter=models.Q(totals__name__contains="bar"))
+
+    @lookup_property
+    def max_(self):
+        return aggregates.Max("number")
+
+    @lookup_property
+    def max_rel(self):
+        return aggregates.Max("totals__number")
+
+    @lookup_property
+    def min_(self):
+        return aggregates.Min("number")
+
+    @lookup_property
+    def min_rel(self):
+        return aggregates.Min("totals__number")
+
+    @lookup_property
+    def sum_(self):
+        return aggregates.Sum("number")
+
+    @lookup_property
+    def sum_rel(self):
+        return aggregates.Sum("totals__number")
+
+    @lookup_property
+    def sum_filter(self):
+        return aggregates.Sum("number", filter=models.Q(number__lte=3))
+
+    @lookup_property
+    def avg(self):
+        return aggregates.Avg("number")
+
+    @lookup_property
+    def std_dev(self):
+        return aggregates.StdDev("number")
+
+    @lookup_property
+    def variance(self):
+        return aggregates.Variance("number")
 
 
 class Far(models.Model):
     name = models.CharField(max_length=256)
+    number = models.IntegerField(null=True)
 
 
 class Thing(models.Model):
     name = models.CharField(max_length=256)
+    number = models.IntegerField(null=True)
     example = models.OneToOneField(Example, on_delete=models.CASCADE, related_name="thing")
     far = models.OneToOneField(Far, on_delete=models.CASCADE, related_name="thing")
 
 
 class Total(models.Model):
     name = models.CharField(max_length=256)
+    number = models.IntegerField(null=True)
     example = models.ForeignKey(Example, on_delete=models.CASCADE, related_name="totals")
     far = models.OneToOneField(Far, on_delete=models.CASCADE, related_name="total")
 
 
 class Part(models.Model):
     name = models.CharField(max_length=256)
+    number = models.IntegerField(null=True)
     examples = models.ManyToManyField(Example, related_name="parts")
     far = models.OneToOneField(Far, on_delete=models.CASCADE, related_name="part")
 
@@ -710,5 +737,20 @@ class Abstract(models.Model):
         abstract = True
 
 
+class AnotherAbstract(Abstract):
+    another_abstract_field = models.CharField(max_length=256)
+
+    @lookup_property
+    def another_abstract_property(self):
+        return models.F("another_abstract_field")
+
+    class Meta:
+        abstract = True
+
+
 class Concrete(Abstract):
     concrete_field = models.CharField(max_length=256)
+
+
+class AnotherConcrete(AnotherAbstract):
+    another_concrete_field = models.CharField(max_length=256)

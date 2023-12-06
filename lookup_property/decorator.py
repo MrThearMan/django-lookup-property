@@ -20,34 +20,34 @@ __all__ = [
 
 
 class lookup_property:  # noqa: N801
-    """Decorator for converting a class method to a field"""
+    """Decorator for converting a class method to a LookupPropertyField"""
 
     @overload
-    def __init__(self, arg: FunctionType) -> None:
+    def __init__(self, func: FunctionType) -> None:
         """When using '@lookup_property'."""
 
     @overload
-    def __init__(self, arg: State) -> None:
-        """When using '@lookup_property(state=State(...))' to set initial state."""
+    def __init__(self, *, joins: bool = ..., use_tz: bool = ...) -> None:
+        """When using '@lookup_property(...)' to set initial state."""
 
-    def __init__(self, arg: FunctionType | State) -> None:
+    def __init__(self, func: FunctionType | None = None, /, **kwargs: Any) -> None:
         # Set in `LookupPropertyField`
         self.field: LookupPropertyField = None  # type: ignore[assignment]
 
         if not hasattr(self, "state"):
-            self.state = arg if isinstance(arg, State) else State()
+            self.state = State(**kwargs)
 
-        if isinstance(arg, FunctionType):
-            self.expression: Expr = arg(None)
+        if isinstance(func, FunctionType):
+            self.expression: Expr = func(None)
             self.module = query_expression_ast_module(
                 expression=self.expression,
-                function_name=arg.__code__.co_name,
+                function_name=func.__code__.co_name,
                 state=self.state,
             )
             self.func = ast_module_to_function(
                 module=self.module,
-                function_name=arg.__code__.co_name,
-                filename=arg.__code__.co_filename,
+                function_name=func.__code__.co_name,
+                filename=func.__code__.co_filename,
                 state=self.state,
             )
 
@@ -80,6 +80,7 @@ class lookup_property:  # noqa: N801
         # Called by `django.db.models.base.ModelBase.add_to_class`
         field = LookupPropertyField(cls, target_property=self)
         field.set_attributes_from_name(name)
+        field.concrete = False  # Don't include field in `SELECT` statements
         cls._meta.add_field(field, private=True)
         setattr(cls, field.attname, self)
 

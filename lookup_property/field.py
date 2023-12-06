@@ -23,7 +23,7 @@ __all__ = [
 
 class LookupPropertyField(models.Field):
     def __init__(self, model: type[models.Model], target_property: lookup_property) -> None:
-        self.model = model
+        self.model = model  # Required by `LookupPropertyCol` to resolve related lookups
         self.target_property = target_property
         if target_property.state.joins:
             self.path_infos = LazyPathInfo(self)
@@ -53,13 +53,10 @@ class LookupPropertyField(models.Field):
         self,
         cls: type[models.Model],
         name: str,
-        private_only: bool = False,  # noqa: FBT001, FBT002, ARG002
+        private_only: bool = False,  # noqa: FBT001, FBT002
     ) -> None:
         # Register property on a concrete implementation of an abstract model
-        if cls != self.model:
-            field = LookupPropertyField(cls, target_property=self.target_property)
-            field.set_attributes_from_name(name)
-            cls._meta.add_field(field, private=True)
+        self.target_property.contribute_to_class(cls, name, private_only=private_only)
 
 
 class LazyPathInfo:

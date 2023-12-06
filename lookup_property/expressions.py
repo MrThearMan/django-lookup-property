@@ -79,7 +79,7 @@ class LookupPropertyCol(models.Expression):
         resolved: Col | WhereNode | BaseExpression
         resolved = expression.resolve_expression(compiler.query)  # type: ignore[assignment]
 
-        vendor_impl: (Callable[[SQLCompiler, BaseDatabaseWrapper], tuple[str, list[Any]]] | None)
+        vendor_impl: Callable[[SQLCompiler, BaseDatabaseWrapper], tuple[str, list[Any]]] | None
         vendor_impl = getattr(resolved, f"as_{connection.vendor}", None)
         if vendor_impl is not None:
             return vendor_impl(compiler, connection)  # type: ignore[no-any-return]
@@ -87,13 +87,13 @@ class LookupPropertyCol(models.Expression):
         return resolved.as_sql(compiler, connection)
 
     @cached_property
-    def convert_value(self) -> ConvertFunc:
+    def convert_value(self) -> ConvertFunc:  # pragma: no cover
         if expression_has_output_field(self.expression) and hasattr(self.expression, "convert_value"):
             return self.expression.convert_value
         return super().convert_value
 
 
-def expression_has_output_field(expression: Expr) -> bool:
+def expression_has_output_field(expression: Expr) -> bool:  # pragma: no cover
     # Check whether the 'output_field' of the expression can be resolved.
     # This might fail, and does fail for expressions like Trunc if the 'output_field'
     # is not explicitly given (e.g. 'Trunc(F("foo"))' will end up using 'BaseExpression.output_field',

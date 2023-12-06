@@ -1194,73 +1194,127 @@ def test_lookup_property__tan__source():
     )
 
 
-# def test_lookup_property__count_field__source():
-#     assert Example.count_field.func_source == cleandoc(
-#         """
-#         def count_field(self):
-#             return len(self.__class__.objects.all())
-#         """,
-#     )
-#
-#
-# def test_lookup_property__count_field_filter__source():
-#     assert Example.count_field_filter.func_source == cleandoc(
-#         """
-#         def count_field_filter(self, arg4):
-#             return len(self.__class__.objects.filter(arg4()))
-#         """,
-#     )
-#
-#
-# def test_lookup_property__count_rel__source():
-#     assert Example.count_rel.func_source == cleandoc(
-#         """
-#         def count_rel(self):
-#             return len(self.totals.all())
-#         """,
-#     )
-#
-#
-# def test_lookup_property__count_rel_filter__source():
-#     assert Example.count_rel_filter.func_source == cleandoc(
-#         """
-#         def count_rel_filter(self, arg5):
-#             return len(self.totals.filter(arg5()))
-#         """,
-#     )
-#
-#
-# def test_lookup_property__max__source():
-#     assert Example.max_.func_source == cleandoc(
-#         """
-#         def max_(self):
-#             return max(self.__class__.objects.values_list('number', flat=True).all(), default=None)
-#         """,
-#     )
-#
-#
-# def test_lookup_property__min__source():
-#     assert Example.min_.func_source == cleandoc(
-#         """
-#         def min_(self):
-#             return min(self.__class__.objects.values_list('number', flat=True).all(), default=None)
-#         """,
-#     )
-#
-#
-# def test_lookup_property__sum__source():
-#     assert Example.sum_.func_source == cleandoc(
-#         """
-#         def sum_(self):
-#             return sum(self.__class__.objects.values_list('number', flat=True).all())
-#         """,
-#     )
-#
-#
-# def test_lookup_property__sum_filter__source():
-#     assert Example.sum_filter.func_source == cleandoc(
-#         """
-#         def sum_filter(self, arg6):
-#             return sum(self.__class__.objects.values_list('number', flat=True).filter(arg6()))
-#         """,
-#     )
+def test_lookup_property__count_field__source():
+    assert Example.count_field.func_source == cleandoc(
+        """
+        def count_field(self, arg4):
+            return self.__class__.objects.aggregate(arg4=arg4())['arg4']
+        """,
+    )
+
+
+def test_lookup_property__count_field_filter__source():
+    assert Example.count_field_filter.func_source == cleandoc(
+        """
+        def count_field_filter(self, arg5):
+            return self.__class__.objects.aggregate(arg5=arg5())['arg5']
+        """,
+    )
+
+
+def test_lookup_property__count_rel__source():
+    assert Example.count_rel.func_source == cleandoc(
+        """
+        def count_rel(self, arg6):
+            return self.__class__.objects.aggregate(arg6=arg6())['arg6']
+        """,
+    )
+
+
+def test_lookup_property__count_rel_filter__source():
+    assert Example.count_rel_filter.func_source == cleandoc(
+        """
+        def count_rel_filter(self, arg7):
+            return self.__class__.objects.aggregate(arg7=arg7())['arg7']
+        """,
+    )
+
+
+def test_lookup_property__max__source():
+    assert Example.max_.func_source == cleandoc(
+        """
+        def max_(self, arg8):
+            return self.__class__.objects.aggregate(arg8=arg8())['arg8']
+        """,
+    )
+
+
+def test_lookup_property__max_rel__source():
+    assert Example.max_rel.func_source == cleandoc(
+        """
+        def max_rel(self, arg9):
+            return self.__class__.objects.aggregate(arg9=arg9())['arg9']
+        """,
+    )
+
+
+def test_lookup_property__min__source():
+    assert Example.min_.func_source == cleandoc(
+        """
+        def min_(self, arg10):
+            return self.__class__.objects.aggregate(arg10=arg10())['arg10']
+        """,
+    )
+
+
+def test_lookup_property__min_rel__source():
+    assert Example.min_rel.func_source == cleandoc(
+        """
+        def min_rel(self, arg11):
+            return self.__class__.objects.aggregate(arg11=arg11())['arg11']
+        """,
+    )
+
+
+def test_lookup_property__sum__source():
+    assert Example.sum_.func_source == cleandoc(
+        """
+        def sum_(self, arg12):
+            return self.__class__.objects.aggregate(arg12=arg12())['arg12']
+        """,
+    )
+
+
+def test_lookup_property__sum_rel__source():
+    assert Example.sum_rel.func_source == cleandoc(
+        """
+        def sum_rel(self, arg13):
+            return self.__class__.objects.aggregate(arg13=arg13())['arg13']
+        """,
+    )
+
+
+def test_lookup_property__sum_filter__source():
+    assert Example.sum_filter.func_source == cleandoc(
+        """
+        def sum_filter(self, arg14):
+            return self.__class__.objects.aggregate(arg14=arg14())['arg14']
+        """,
+    )
+
+
+def test_lookup_property__avg__source():
+    assert Example.avg.func_source == cleandoc(
+        """
+        def avg(self, arg15):
+            return self.__class__.objects.aggregate(arg15=arg15())['arg15']
+        """,
+    )
+
+
+def test_lookup_property__std_dev__source():
+    assert Example.std_dev.func_source == cleandoc(
+        """
+        def std_dev(self, arg16):
+            return self.__class__.objects.aggregate(arg16=arg16())['arg16']
+        """,
+    )
+
+
+def test_lookup_property__variance__source():
+    assert Example.variance.func_source == cleandoc(
+        """
+        def variance(self, arg17):
+            return self.__class__.objects.aggregate(arg17=arg17())['arg17']
+        """,
+    )

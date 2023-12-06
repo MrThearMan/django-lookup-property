@@ -53,5 +53,4 @@ class State:
     imports: set[str] = field(default_factory=set)
     use_tz: bool = field(default_factory=lambda: settings.USE_TZ)
     extra_kwargs: RandomKeyDict[str, Any] = field(default_factory=RandomKeyDict)
-    aggregate_is_to_many: bool = True
     joins: bool = False

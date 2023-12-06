@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 
-def ast_function(func: str, attrs: list[str] = (), *args: Expr, **kwargs: Expr) -> ast.Call:
+def ast_function(func_name: str, attrs: list[str] = (), *args: Expr, **kwargs: Expr) -> ast.Call:
     """
     Transform given attributes and function name to a function call ast node.
 
@@ -21,7 +21,7 @@ def ast_function(func: str, attrs: list[str] = (), *args: Expr, **kwargs: Expr) 
     (func=foo, attrs=["bar"], fizz=Expr) -> bar.foo(fizz=Expr)
     """
     return ast.Call(
-        func=ast_attribute(*attrs, func),
+        func=ast_attribute(*attrs, func_name),
         args=list(args),
         keywords=[ast.keyword(arg=key, value=value) for key, value in kwargs.items()],
     )
@@ -43,7 +43,7 @@ def ast_attribute(*attrs: str) -> ast.Attribute:
     return value
 
 
-def ast_method(func: str, attrs: list[str] = (), *args: Expr, **kwargs: Expr) -> ast.Call:
+def ast_method(func_name: str, attrs: list[str] = (), *args: Expr, **kwargs: Expr) -> ast.Call:
     """
     Transform given attributes and function name to a class instance method ast node.
 
@@ -54,7 +54,7 @@ def ast_method(func: str, attrs: list[str] = (), *args: Expr, **kwargs: Expr) ->
     (func=foo, attrs=["bar"], fizz=Expr) -> self.bar.foo(fizz=Expr)
     """
     attrs.insert(0, "self")
-    return ast_function(func, attrs, *args, **kwargs)
+    return ast_function(func_name, attrs, *args, **kwargs)
 
 
 def ast_property(*attrs: str) -> ast.Attribute:
