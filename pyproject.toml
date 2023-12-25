@@ -50,7 +50,7 @@ Django = ">=4.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "7.4.3"
-coverage = "7.3.3"
+coverage = "7.3.4"
 pytest-django = "4.7.0"
 freezegun = "^1.2.2"
 pre-commit = "3.6.0"
