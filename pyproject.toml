@@ -49,7 +49,7 @@ python = ">=3.11,<4"
 Django = ">=4.1"
 
 [tool.poetry.group.test.dependencies]
-pytest = "7.4.3"
+pytest = "7.4.4"
 coverage = "7.4.0"
 pytest-django = "4.7.0"
 freezegun = "^1.2.2"
