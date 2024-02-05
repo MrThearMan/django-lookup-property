@@ -51,7 +51,7 @@ Django = ">=4.1"
 [tool.poetry.group.test.dependencies]
 pytest = "8.0.0"
 coverage = "7.4.1"
-pytest-django = "4.7.0"
+pytest-django = "4.8.0"
 freezegun = "^1.2.2"
 pre-commit = "3.6.0"
 tox = "4.12.1"
