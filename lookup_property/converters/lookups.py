@@ -80,9 +80,13 @@ def to_lookup_comparison(attr: str, value: Any, state: State) -> ast.AST:
 
 
 @lookup_singledispatch
-def lookup_to_ast(lookup: str, attrs: list[str], value: Any, state: State) -> ast.AST:
-    msg = f"No implementation for '{lookup}' ({LOOKUP_SEP.join(attrs)}{LOOKUP_SEP}{lookup}={value!r})."
-    raise ValueError(msg)
+def lookup_to_ast(lookup: str, attrs: list[str], value: Any, state: State) -> ast.Compare:
+    """Default behavior. Q(foo__bar=1) -> self.foo.bar == 1"""
+    return ast.Compare(
+        left=ast_property(*attrs, lookup),
+        ops=[ast.Eq()],
+        comparators=[expression_to_ast(value, state)],
+    )
 
 
 @lookup_to_ast.register(lookup=lookups.Exact.lookup_name)

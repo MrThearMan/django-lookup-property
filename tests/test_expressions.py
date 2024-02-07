@@ -1,6 +1,6 @@
 import pytest
 
-from tests.factories import ExampleFactory
+from tests.factories import ExampleFactory, TotalFactory
 
 pytestmark = [
     pytest.mark.django_db,
@@ -191,6 +191,26 @@ def test_lookup_property__case_2():
 def test_lookup_property__case_3():
     example = ExampleFactory.create()
     assert example.case_3 == 11
+
+
+def test_lookup_property__case_4():
+    example = ExampleFactory.create()
+    assert example.case_4 == 1
+
+
+def test_lookup_property__case_5():
+    total = TotalFactory.create(number=1)
+    assert total.example.case_5 == 1
+
+
+def test_lookup_property__case_6():
+    total = TotalFactory.create(far__number=1)
+    assert total.example.case_6 == 1
+
+
+def test_lookup_property__case_7():
+    total = TotalFactory.create(number=1, far__number=1)
+    assert total.example.case_7 == 1
 
 
 def test_lookup_property__cast():

@@ -278,7 +278,7 @@ class Example(models.Model):
     def case(self):
         return models.Case(
             models.When(
-                condition=models.Q(first_name="foo"),
+                models.Q(first_name="foo"),
                 then=models.Value(1),
             ),
             default=models.Value(2),
@@ -324,6 +324,62 @@ class Example(models.Model):
             ),
             output_field=models.IntegerField(),
         )
+
+    @lookup_property
+    def case_4(self):
+        return models.Case(
+            models.When(
+                condition=models.Q(first_name="foo") & models.Q(last_name="bar"),
+                then=models.Value(1),
+            ),
+            default=models.Value(2),
+            output_field=models.IntegerField(),
+        )
+
+    @lookup_property
+    def case_5(self):
+        return models.Case(
+            models.When(
+                condition=models.Q(totals__number=1),
+                then=models.Value(1),
+            ),
+            default=models.Value(2),
+            output_field=models.IntegerField(),
+        )
+
+    @case_5.override
+    def _(self):
+        return 1 if self.totals.filter(number=1).exists() else 2
+
+    @lookup_property
+    def case_6(self):
+        return models.Case(
+            models.When(
+                condition=models.Q(totals__far__number=1),
+                then=models.Value(1),
+            ),
+            default=models.Value(2),
+            output_field=models.IntegerField(),
+        )
+
+    @case_6.override
+    def _(self):
+        return 1 if self.totals.filter(far__number=1).exists() else 2
+
+    @lookup_property
+    def case_7(self):
+        return models.Case(
+            models.When(
+                condition=models.Q(totals__number=1) & models.Q(totals__far__number=1),
+                then=models.Value(1),
+            ),
+            default=models.Value(2),
+            output_field=models.IntegerField(),
+        )
+
+    @case_7.override
+    def _(self):
+        return 1 if self.totals.filter(number=1, far__number=1).exists() else 2
 
     @lookup_property
     def cast_str(self):

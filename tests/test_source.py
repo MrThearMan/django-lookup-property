@@ -745,6 +745,45 @@ def test_lookup_property__case_3__source():
     )
 
 
+def test_lookup_property__case_4__source():
+    assert Example.case_4.func_source == cleandoc(
+        """
+        def case_4(self):
+            return 1 if self.first_name == 'foo' and self.last_name == 'bar' else 2
+        """,
+    )
+
+
+def test_lookup_property__case_5__source():
+    assert Example.case_5.func_source == cleandoc(
+        """
+        @case_5.override
+        def _(self):
+            return 1 if self.totals.filter(number=1).exists() else 2
+        """,
+    )
+
+
+def test_lookup_property__case_6__source():
+    assert Example.case_6.func_source == cleandoc(
+        """
+        @case_6.override
+        def _(self):
+            return 1 if self.totals.filter(far__number=1).exists() else 2
+        """,
+    )
+
+
+def test_lookup_property__case_7__source():
+    assert Example.case_7.func_source == cleandoc(
+        """
+        @case_7.override
+        def _(self):
+            return 1 if self.totals.filter(number=1, far__number=1).exists() else 2
+        """,
+    )
+
+
 def test_lookup_property__cast_str__source():
     assert Example.cast_str.func_source == cleandoc(
         """
