@@ -79,7 +79,11 @@ class LazyPathInfo:
 
     @cached_property
     def get_path_info(self) -> list[PathInfo]:
-        parts: list[str] = self.field.expression.name.split(LOOKUP_SEP)  # type: ignore[union-attr]
+        expression = self.field.expression
+        while hasattr(expression, "source_expressions"):
+            expression = expression.source_expressions[0]
+
+        parts: list[str] = expression.name.split(LOOKUP_SEP)  # type: ignore[union-attr]
         rel_or_field: ForeignObjectRel | ForeignObject | ManyToManyField
         rel_or_field = self.field.model._meta.get_field(parts[0])  # type: ignore[assignment]
 

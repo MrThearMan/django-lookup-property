@@ -355,7 +355,7 @@ class Example(models.Model):
     def case_6(self):
         return models.Case(
             models.When(
-                condition=models.Q(totals__far__number=1),
+                condition=models.Q(parts__far__number=1),
                 then=models.Value(1),
             ),
             default=models.Value(2),
@@ -364,13 +364,13 @@ class Example(models.Model):
 
     @case_6.override
     def _(self):
-        return 1 if self.totals.filter(far__number=1).exists() else 2
+        return 1 if self.parts.filter(far__number=1).exists() else 2
 
     @lookup_property
     def case_7(self):
         return models.Case(
             models.When(
-                condition=models.Q(totals__number=1) & models.Q(totals__far__number=1),
+                condition=models.Q(parts__number=1) & models.Q(parts__far__number=1),
                 then=models.Value(1),
             ),
             default=models.Value(2),
@@ -379,7 +379,7 @@ class Example(models.Model):
 
     @case_7.override
     def _(self):
-        return 1 if self.totals.filter(number=1, far__number=1).exists() else 2
+        return 1 if self.parts.filter(number=1, far__number=1).exists() else 2
 
     @lookup_property
     def cast_str(self):
@@ -711,6 +711,10 @@ class Example(models.Model):
     def count_rel(self):
         return aggregates.Count("totals__pk")
 
+    @lookup_property(joins=True)
+    def count_rel_deep(self):
+        return aggregates.Count("parts__aliens")
+
     @lookup_property
     def count_rel_filter(self):
         return aggregates.Count("totals", filter=models.Q(totals__name__contains="bar"))
@@ -759,6 +763,14 @@ class Example(models.Model):
 class Far(models.Model):
     name = models.CharField(max_length=256)
     number = models.IntegerField(null=True)
+    total = models.OneToOneField("Total", on_delete=models.CASCADE, related_name="far")
+
+
+class Alien(models.Model):
+    name = models.CharField(max_length=256)
+    number = models.IntegerField(null=True)
+    total = models.ForeignKey("Total", on_delete=models.CASCADE, related_name="aliens")
+    parts = models.ManyToManyField("Part", related_name="aliens")
 
 
 class Thing(models.Model):
@@ -766,20 +778,20 @@ class Thing(models.Model):
     number = models.IntegerField(null=True)
     example = models.OneToOneField(Example, on_delete=models.CASCADE, related_name="thing")
     far = models.OneToOneField(Far, on_delete=models.CASCADE, related_name="thing")
+    aliens = models.ManyToManyField(Alien, related_name="things")
 
 
 class Total(models.Model):
     name = models.CharField(max_length=256)
     number = models.IntegerField(null=True)
     example = models.ForeignKey(Example, on_delete=models.CASCADE, related_name="totals")
-    far = models.OneToOneField(Far, on_delete=models.CASCADE, related_name="total")
 
 
 class Part(models.Model):
     name = models.CharField(max_length=256)
     number = models.IntegerField(null=True)
     examples = models.ManyToManyField(Example, related_name="parts")
-    far = models.OneToOneField(Far, on_delete=models.CASCADE, related_name="part")
+    far = models.ForeignKey(Far, on_delete=models.CASCADE, related_name="parts")
 
 
 class Abstract(models.Model):

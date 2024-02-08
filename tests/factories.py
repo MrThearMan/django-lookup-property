@@ -4,7 +4,19 @@ import factory
 from factory.django import DjangoModelFactory
 
 from lookup_property.typing import Any, Iterable
-from tests.example.models import AnotherConcrete, Child, Concrete, Example, Far, Other, Part, Question, Thing, Total
+from tests.example.models import (
+    Alien,
+    AnotherConcrete,
+    Child,
+    Concrete,
+    Example,
+    Far,
+    Other,
+    Part,
+    Question,
+    Thing,
+    Total,
+)
 
 __all__ = [
     "ChildFactory",
@@ -15,6 +27,7 @@ __all__ = [
     "QuestionFactory",
     "ThingFactory",
     "TotalFactory",
+    "AlienFactory",
 ]
 
 
@@ -60,25 +73,37 @@ class ExampleFactory(DjangoModelFactory):
     class Meta:
         model = Example
 
+    @classmethod
+    def create(cls, **kwargs: Any) -> Example:
+        return super().create(**kwargs)
+
     @factory.post_generation
     def children(self, create: bool, items: Iterable[Child] | None, **kwargs: Any) -> None:
         if not create:
             return
 
         if items is None and kwargs:
-            self.children.add(ChildFactory.create())
+            self.children.add(ChildFactory.create(**kwargs))
 
         for item in items or []:
             self.children.add(item)
 
-    @classmethod
-    def create(cls, **kwargs: Any) -> Example:
-        return super().create(**kwargs)
+    @factory.post_generation
+    def parts(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:
+        if not create:
+            return
+
+        if items is None and kwargs:
+            self.parts.add(PartFactory.create(**kwargs))
+
+        for item in items or []:
+            self.parts.add(item)
 
 
 class FarFactory(DjangoModelFactory):
     name = "foo"
     number = 12
+    total = factory.SubFactory("tests.factories.TotalFactory")
 
     class Meta:
         model = Far
@@ -86,6 +111,52 @@ class FarFactory(DjangoModelFactory):
     @classmethod
     def create(cls, **kwargs: Any) -> Far:
         return super().create(**kwargs)
+
+    @factory.post_generation
+    def parts(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:
+        if not create:
+            return
+
+        if items is None and kwargs:
+            self.parts.add(PartFactory.create(**kwargs))
+
+        for item in items or []:
+            self.parts.add(item)
+
+
+class AlienFactory(DjangoModelFactory):
+    name = "foo"
+    number = 12
+    total = factory.SubFactory("tests.factories.TotalFactory")
+
+    class Meta:
+        model = Alien
+
+    @classmethod
+    def create(cls, **kwargs: Any) -> Alien:
+        return super().create(**kwargs)
+
+    @factory.post_generation
+    def parts(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:
+        if not create:
+            return
+
+        if items is None and kwargs:
+            self.parts.add(PartFactory.create(**kwargs))
+
+        for item in items or []:
+            self.parts.add(item)
+
+    @factory.post_generation
+    def things(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:
+        if not create:
+            return
+
+        if items is None and kwargs:
+            self.things.add(ThingFactory.create(**kwargs))
+
+        for item in items or []:
+            self.things.add(item)
 
 
 class ThingFactory(DjangoModelFactory):
@@ -101,12 +172,22 @@ class ThingFactory(DjangoModelFactory):
     def create(cls, **kwargs: Any) -> Thing:
         return super().create(**kwargs)
 
+    @factory.post_generation
+    def aliens(self, create: bool, items: Iterable[Alien] | None, **kwargs: Any) -> None:
+        if not create:
+            return
+
+        if items is None and kwargs:
+            self.aliens.add(AlienFactory.create(**kwargs))
+
+        for item in items or []:
+            self.aliens.add(item)
+
 
 class TotalFactory(DjangoModelFactory):
     name = "foo"
     number = 12
     example = factory.SubFactory(ExampleFactory)
-    far = factory.SubFactory(FarFactory)
 
     class Meta:
         model = Total
@@ -124,20 +205,31 @@ class PartFactory(DjangoModelFactory):
     class Meta:
         model = Part
 
+    @classmethod
+    def create(cls, **kwargs: Any) -> Part:
+        return super().create(**kwargs)
+
     @factory.post_generation
     def examples(self, create: bool, items: Iterable[Example] | None, **kwargs: Any) -> None:
         if not create:
             return
 
         if items is None and kwargs:
-            self.examples.add(ExampleFactory.create())
+            self.examples.add(ExampleFactory.create(**kwargs))
 
         for item in items or []:
             self.examples.add(item)
 
-    @classmethod
-    def create(cls, **kwargs: Any) -> Part:
-        return super().create(**kwargs)
+    @factory.post_generation
+    def aliens(self, create: bool, items: Iterable[Alien] | None, **kwargs: Any) -> None:
+        if not create:
+            return
+
+        if items is None and kwargs:
+            self.aliens.add(AlienFactory.create(**kwargs))
+
+        for item in items or []:
+            self.aliens.add(item)
 
 
 class ConcreteFactory(DjangoModelFactory):

@@ -204,13 +204,13 @@ def test_lookup_property__case_5():
 
 
 def test_lookup_property__case_6():
-    total = TotalFactory.create(far__number=1)
-    assert total.example.case_6 == 1
+    example = ExampleFactory.create(parts__far__number=1)
+    assert example.case_6 == 1
 
 
 def test_lookup_property__case_7():
-    total = TotalFactory.create(number=1, far__number=1)
-    assert total.example.case_7 == 1
+    example = ExampleFactory.create(parts__number=1, parts__far__number=1)
+    assert example.case_7 == 1
 
 
 def test_lookup_property__cast():

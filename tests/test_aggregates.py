@@ -1,6 +1,6 @@
 import pytest
 
-from tests.factories import ExampleFactory, TotalFactory
+from tests.factories import AlienFactory, ExampleFactory, PartFactory, TotalFactory
 
 pytestmark = [
     pytest.mark.django_db,
@@ -26,6 +26,16 @@ def test_lookup_property__count_rel():
     assert example.count_rel == 0
     TotalFactory.create(example=example)
     assert example.count_rel == 1
+
+
+def test_lookup_property__count_rel_deep():
+    example = ExampleFactory.create()
+    assert example.count_rel_deep == 0
+    alien = AlienFactory.create()
+    part = PartFactory.create()
+    part.examples.add(example)
+    alien.parts.add(part)
+    assert example.count_rel_deep == 1
 
 
 def test_lookup_property__count_rel_filter():

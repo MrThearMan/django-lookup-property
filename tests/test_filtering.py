@@ -80,3 +80,9 @@ def test_filter_by_lookup_property__subquery__exists():
     other = Other.objects.annotate(has_a=subquery_1, has_c=subquery_2).first()
     assert other.has_a is True
     assert other.has_c is False
+
+
+def test_filter_by_lookup_property__count():
+    ExampleFactory.create(parts__aliens__number=1)
+    assert Example.objects.filter(count_rel_deep=1).count() == 1
+    assert Example.objects.filter(count_rel_deep=0).count() == 0
