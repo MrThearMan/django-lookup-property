@@ -30,12 +30,7 @@ class lookup_property:  # noqa: N801
     def __init__(self, *, joins: bool = ..., use_tz: bool = ..., skip_codegen: bool) -> None:
         """When using '@lookup_property(...)' to set initial state."""
 
-    def __init__(
-        self, func: FunctionType | None = None,
-        /,
-        skip_codegen: bool = False,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, func: FunctionType | None = None, /, **kwargs: Any) -> None:
         # Set in `LookupPropertyField`
         self.field: LookupPropertyField = None  # type: ignore[assignment]
 
@@ -44,7 +39,7 @@ class lookup_property:  # noqa: N801
 
         if isinstance(func, FunctionType):
             self.expression: Expr = func(None)
-            if skip_codegen:  # pragma: no cover
+            if self.state.skip_codegen:  # pragma: no cover
                 return
 
             self.module = query_expression_ast_module(

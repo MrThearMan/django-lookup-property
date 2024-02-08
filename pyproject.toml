@@ -75,6 +75,8 @@ line-length = 120
 extend-exclude = [
     "tests/*",
 ]
+
+[tool.ruff.lint]
 typing-modules = [
     "lookup_property.typing",
 ]
@@ -138,7 +140,7 @@ ignore = [
     "W191",     # Indentation contains tabs
 ]
 
-[tool.ruff.extend-per-file-ignores]
+[tool.ruff.lint.extend-per-file-ignores]
 "lookup_property/converters/*.py" = [
     "ARG001",   # Unused function argument
 ]

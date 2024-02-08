@@ -55,3 +55,4 @@ class State:
     use_tz: bool = field(default_factory=lambda: settings.USE_TZ)
     extra_kwargs: RandomKeyDict = field(default_factory=RandomKeyDict)
     joins: bool = False
+    skip_codegen: bool = False
