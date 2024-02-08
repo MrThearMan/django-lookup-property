@@ -27,7 +27,7 @@ class lookup_property:  # noqa: N801
         """When using '@lookup_property'."""
 
     @overload
-    def __init__(self, *, joins: bool = ..., use_tz: bool = ..., skip_codegen: bool) -> None:
+    def __init__(self, *, joins: bool | list[str] = ..., use_tz: bool = ..., skip_codegen: bool) -> None:
         """When using '@lookup_property(...)' to set initial state."""
 
     def __init__(self, func: FunctionType | None = None, /, **kwargs: Any) -> None:
@@ -39,7 +39,7 @@ class lookup_property:  # noqa: N801
 
         if isinstance(func, FunctionType):
             self.expression: Expr = func(None)
-            if self.state.skip_codegen:  # pragma: no cover
+            if self.state.skip_codegen:
                 return
 
             self.module = query_expression_ast_module(

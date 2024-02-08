@@ -86,3 +86,15 @@ def test_filter_by_lookup_property__count():
     ExampleFactory.create(parts__aliens__number=1)
     assert Example.objects.filter(count_rel_deep=1).count() == 1
     assert Example.objects.filter(count_rel_deep=0).count() == 0
+
+
+def test_filter_by_lookup_property__case_6():
+    ExampleFactory.create(parts__far__number=1)
+    assert Example.objects.filter(case_6=1).count() == 1
+    assert Example.objects.filter(case_6=0).count() == 0
+
+
+def test_filter_by_lookup_property__case_7():
+    ExampleFactory.create(parts__number=1, parts__far__number=1)
+    assert Example.objects.filter(case_7=1).count() == 1
+    assert Example.objects.filter(case_7=0).count() == 0

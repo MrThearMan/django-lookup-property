@@ -89,7 +89,7 @@ class Example(models.Model):
     def forward_many_to_one(self):
         return models.F("other__pk")
 
-    @lookup_property(joins=True)
+    @lookup_property(joins=True, skip_codegen=True)
     def reverse_one_to_many(self):
         return models.F("totals__pk")
 
@@ -97,7 +97,7 @@ class Example(models.Model):
     def _(self):
         return self.totals.values_list("pk", flat=True).first()
 
-    @lookup_property(joins=True)
+    @lookup_property(joins=True, skip_codegen=True)
     def forward_many_to_many(self):
         return models.F("children__pk")
 
@@ -105,7 +105,7 @@ class Example(models.Model):
     def _(self):
         return self.children.values_list("pk", flat=True).first()
 
-    @lookup_property(joins=True)
+    @lookup_property(joins=True, skip_codegen=True)
     def reverse_many_to_many(self):
         return models.F("parts__pk")
 
@@ -351,7 +351,7 @@ class Example(models.Model):
     def _(self):
         return 1 if self.totals.filter(number=1).exists() else 2
 
-    @lookup_property
+    @lookup_property(joins=["parts"])
     def case_6(self):
         return models.Case(
             models.When(
@@ -366,7 +366,7 @@ class Example(models.Model):
     def _(self):
         return 1 if self.parts.filter(far__number=1).exists() else 2
 
-    @lookup_property
+    @lookup_property(joins=["parts"])
     def case_7(self):
         return models.Case(
             models.When(

@@ -54,5 +54,5 @@ class State:
     imports: set[str] = field(default_factory=set)
     use_tz: bool = field(default_factory=lambda: settings.USE_TZ)
     extra_kwargs: RandomKeyDict = field(default_factory=RandomKeyDict)
-    joins: bool = False
+    joins: bool | list[str] = False
     skip_codegen: bool = False

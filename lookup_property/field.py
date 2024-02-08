@@ -26,7 +26,7 @@ class LookupPropertyField(models.Field):
         self.model = model  # Required by `LookupPropertyCol` to resolve related lookups
         self.target_property = target_property
         if target_property.state.joins:
-            self.path_infos = LazyPathInfo(self)
+            self.path_infos = LazyPathInfo(self, joins=target_property.state.joins)
 
         super().__init__()
         target_property.field = self
@@ -68,8 +68,9 @@ class LazyPathInfo:
     sql joins to the query, e.g., for `queryset.count()`.
     """
 
-    def __init__(self, field: LookupPropertyField) -> None:
+    def __init__(self, field: LookupPropertyField, *, joins: list[str] | bool = True) -> None:
         self.field = field
+        self.joins: list[str] = joins if isinstance(joins, list) else []
 
     def __iter__(self) -> Iterator[PathInfo]:
         return iter([self[0]])
@@ -79,16 +80,22 @@ class LazyPathInfo:
 
     @cached_property
     def get_path_info(self) -> list[PathInfo]:
-        expression = self.field.expression
-        while hasattr(expression, "source_expressions"):
-            expression = expression.source_expressions[0]
+        joins = self.joins
+        if not joins:
+            expression = self.field.expression
+            while hasattr(expression, "source_expressions"):
+                expression = expression.source_expressions[0]
 
-        parts: list[str] = expression.name.split(LOOKUP_SEP)  # type: ignore[union-attr]
-        rel_or_field: ForeignObjectRel | ForeignObject | ManyToManyField
-        rel_or_field = self.field.model._meta.get_field(parts[0])  # type: ignore[assignment]
+            joins = expression.name.split(LOOKUP_SEP)[:1]
 
-        # Forward relation
-        if isinstance(rel_or_field, ForeignObjectRel):
-            return rel_or_field.field.get_reverse_path_info()  # type: ignore[no-any-return,attr-defined]
-        # Reverse relation
-        return rel_or_field.get_path_info()  # type: ignore[union-attr]
+        path_info: list[PathInfo] = []
+        for join in joins:
+            rel_or_field: ForeignObjectRel | ForeignObject | ManyToManyField
+            rel_or_field = self.field.model._meta.get_field(join)  # type: ignore[assignment]
+
+            if isinstance(rel_or_field, ForeignObjectRel):
+                path_info.extend(rel_or_field.field.get_reverse_path_info())
+            else:
+                path_info.extend(rel_or_field.get_path_info())
+
+        return path_info
