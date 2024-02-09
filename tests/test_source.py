@@ -721,7 +721,7 @@ def test_lookup_property__case__source():
     assert Example.case.func_source == cleandoc(
         """
         def case(self):
-            return 1 if self.first_name == 'foo' else 2
+            return 'foo' if self.first_name == 'foo' else 'bar'
         """,
     )
 
@@ -730,17 +730,17 @@ def test_lookup_property__case_2__source():
     assert Example.case_2.func_source == cleandoc(
         """
         def case_2(self):
-            return 1 if self.first_name == 'fizz' else 2 if self.last_name == 'bar' else 3
+            return 'foo' if self.first_name == 'fizz' else 'bar' if self.last_name == 'bar' else 'baz'
         """,
     )
 
 
 def test_lookup_property__case_3__source():
-    cond_1 = "(11 if self.last_name == 'bar' else 22)"
+    cond_1 = "('fizz' if self.last_name == 'bar' else 'buzz')"
     assert Example.case_3.func_source == cleandoc(
         f"""
         def case_3(self):
-            return {cond_1} if self.first_name == 'foo' else 1 if self.last_name == 'bar' else 2
+            return {cond_1} if self.first_name == 'foo' else 'foo' if self.last_name == 'bar' else 'bar'
         """,
     )
 
@@ -749,7 +749,7 @@ def test_lookup_property__case_4__source():
     assert Example.case_4.func_source == cleandoc(
         """
         def case_4(self):
-            return 1 if self.first_name == 'foo' and self.last_name == 'bar' else 2
+            return 'foo' if self.first_name == 'foo' and self.last_name == 'bar' else 'bar'
         """,
     )
 
@@ -759,7 +759,7 @@ def test_lookup_property__case_5__source():
         """
         @case_5.override
         def _(self):
-            return 1 if self.totals.filter(number=1).exists() else 2
+            return 'foo' if self.totals.filter(number=1).exists() else 'bar'
         """,
     )
 
@@ -769,7 +769,7 @@ def test_lookup_property__case_6__source():
         """
         @case_6.override
         def _(self):
-            return 1 if self.parts.filter(far__number=1).exists() else 2
+            return 'foo' if self.parts.filter(far__number=1).exists() else 'bar'
         """,
     )
 
@@ -779,7 +779,7 @@ def test_lookup_property__case_7__source():
         """
         @case_7.override
         def _(self):
-            return 1 if self.parts.filter(number=1, far__number=1).exists() else 2
+            return 'foo' if self.parts.filter(number=1, far__number=1).exists() else 'bar'
         """,
     )
 

@@ -180,37 +180,37 @@ def test_lookup_property__sha512():
 
 def test_lookup_property__case():
     example = ExampleFactory.create()
-    assert example.case == 1
+    assert example.case == "foo"
 
 
 def test_lookup_property__case_2():
     example = ExampleFactory.create()
-    assert example.case_2 == 2
+    assert example.case_2 == "bar"
 
 
 def test_lookup_property__case_3():
     example = ExampleFactory.create()
-    assert example.case_3 == 11
+    assert example.case_3 == "fizz"
 
 
 def test_lookup_property__case_4():
     example = ExampleFactory.create()
-    assert example.case_4 == 1
+    assert example.case_4 == "foo"
 
 
 def test_lookup_property__case_5():
     total = TotalFactory.create(number=1)
-    assert total.example.case_5 == 1
+    assert total.example.case_5 == "foo"
 
 
 def test_lookup_property__case_6():
     example = ExampleFactory.create(parts__far__number=1)
-    assert example.case_6 == 1
+    assert example.case_6 == "foo"
 
 
 def test_lookup_property__case_7():
     example = ExampleFactory.create(parts__number=1, parts__far__number=1)
-    assert example.case_7 == 1
+    assert example.case_7 == "foo"
 
 
 def test_lookup_property__cast():

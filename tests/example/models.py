@@ -279,10 +279,10 @@ class Example(models.Model):
         return models.Case(
             models.When(
                 models.Q(first_name="foo"),
-                then=models.Value(1),
+                then=models.Value("foo"),
             ),
-            default=models.Value(2),
-            output_field=models.IntegerField(),
+            default=models.Value("bar"),
+            output_field=models.CharField(),
         )
 
     @lookup_property
@@ -290,14 +290,14 @@ class Example(models.Model):
         return models.Case(
             models.When(
                 condition=models.Q(first_name="fizz"),
-                then=models.Value(1),
+                then=models.Value("foo"),
             ),
             models.When(
                 condition=models.Q(last_name="bar"),
-                then=models.Value(2),
+                then=models.Value("bar"),
             ),
-            default=models.Value(3),
-            output_field=models.IntegerField(),
+            default=models.Value("baz"),
+            output_field=models.CharField(),
         )
 
     @lookup_property
@@ -308,21 +308,21 @@ class Example(models.Model):
                 then=models.Case(
                     models.When(
                         condition=models.Q(last_name="bar"),
-                        then=models.Value(11),
+                        then=models.Value("fizz"),
                     ),
-                    default=models.Value(22),
-                    output_field=models.IntegerField(),
+                    default=models.Value("buzz"),
+                    output_field=models.CharField(),
                 ),
             ),
             default=models.Case(
                 models.When(
                     condition=models.Q(last_name="bar"),
-                    then=models.Value(1),
+                    then=models.Value("foo"),
                 ),
-                default=models.Value(2),
-                output_field=models.IntegerField(),
+                default=models.Value("bar"),
+                output_field=models.CharField(),
             ),
-            output_field=models.IntegerField(),
+            output_field=models.CharField(),
         )
 
     @lookup_property
@@ -330,10 +330,10 @@ class Example(models.Model):
         return models.Case(
             models.When(
                 condition=models.Q(first_name="foo") & models.Q(last_name="bar"),
-                then=models.Value(1),
+                then=models.Value("foo"),
             ),
-            default=models.Value(2),
-            output_field=models.IntegerField(),
+            default=models.Value("bar"),
+            output_field=models.CharField(),
         )
 
     @lookup_property
@@ -341,45 +341,45 @@ class Example(models.Model):
         return models.Case(
             models.When(
                 condition=models.Q(totals__number=1),
-                then=models.Value(1),
+                then=models.Value("foo"),
             ),
             default=models.Value(2),
-            output_field=models.IntegerField(),
+            output_field=models.CharField(),
         )
 
     @case_5.override
     def _(self):
-        return 1 if self.totals.filter(number=1).exists() else 2
+        return "foo" if self.totals.filter(number=1).exists() else "bar"
 
     @lookup_property(joins=["parts"])
     def case_6(self):
         return models.Case(
             models.When(
-                condition=models.Q(parts__far__number=1),
-                then=models.Value(1),
+                models.Q(parts__far__number=1),
+                then=models.Value("foo"),
             ),
-            default=models.Value(2),
-            output_field=models.IntegerField(),
+            default=models.Value("bar"),
+            output_field=models.CharField(),
         )
 
     @case_6.override
     def _(self):
-        return 1 if self.parts.filter(far__number=1).exists() else 2
+        return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 
     @lookup_property(joins=["parts"])
     def case_7(self):
         return models.Case(
             models.When(
                 condition=models.Q(parts__number=1) & models.Q(parts__far__number=1),
-                then=models.Value(1),
+                then=models.Value("foo"),
             ),
-            default=models.Value(2),
-            output_field=models.IntegerField(),
+            default=models.Value("bar"),
+            output_field=models.CharField(),
         )
 
     @case_7.override
     def _(self):
-        return 1 if self.parts.filter(number=1, far__number=1).exists() else 2
+        return "foo" if self.parts.filter(number=1, far__number=1).exists() else "bar"
 
     @lookup_property
     def cast_str(self):

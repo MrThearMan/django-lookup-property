@@ -69,7 +69,8 @@ class LookupPropertyCol(models.Expression):
             # Lookup property is referenced with an OuterRef in a Subquery.
             return self.resolved_target_expression  # type: ignore[return-value]
 
-        return reverse_expression(self.expression, join.join_field.name)  # type: ignore[union-attr,attr-defined]
+        table_name: str = join.join_field.name  # type: ignore[union-attr,attr-defined]
+        return extend_expression_to_joined_table(self.expression, table_name)
 
     def as_sql(self, compiler: SQLCompiler, connection: BaseDatabaseWrapper) -> tuple[str, list[Any]]:
         expression: Expr = self.expression
@@ -103,15 +104,16 @@ def expression_has_output_field(expression: Expr) -> bool:  # pragma: no cover
     return False
 
 
-def reverse_expression(expression: Expr, key: str) -> Expr:
+def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr:
+    """Rewrite the expression so that any containing F and Q expressions are referenced from the given table."""
     if isinstance(expression, models.F):
-        return models.F(f"{key}{LOOKUP_SEP}{expression.name}")
+        return models.F(f"{table_name}{LOOKUP_SEP}{expression.name}")
 
     if isinstance(expression, models.Q):
         children: list[tuple[str, Any]] = expression.children  # type: ignore[assignment]
-        return models.Q(**{f"{key}{LOOKUP_SEP}{rest}": value for rest, value in children})
+        return models.Q(**{f"{table_name}{LOOKUP_SEP}{rest}": value for rest, value in children})
 
     expression = deepcopy(expression)
-    expressions = [reverse_expression(expr, key) for expr in expression.get_source_expressions()]
+    expressions = [extend_expression_to_joined_table(expr, table_name) for expr in expression.get_source_expressions()]
     expression.set_source_expressions(expressions)  # type: ignore[arg-type]
     return expression

@@ -2,7 +2,8 @@ import pytest
 from django.db import models
 from django.db.models.functions import Lower, Upper
 
-from tests.example.models import Example, Other, Part, Thing
+from lookup_property.field import L
+from tests.example.models import Example, Far, Other, Part, Thing, Total
 from tests.factories import ExampleFactory, OtherFactory, PartFactory, ThingFactory
 
 pytestmark = [
@@ -30,8 +31,8 @@ def test_filter_by_related_lookup_property__q():
 
 def test_filter_by_related_lookup_property__case():
     ThingFactory.create()
-    assert Thing.objects.filter(example__case=1).count() == 1
-    assert Thing.objects.filter(example__case=2).count() == 0
+    assert Thing.objects.filter(example__case="foo").count() == 1
+    assert Thing.objects.filter(example__case="bar").count() == 0
 
 
 def test_filter_by_lookup_property__only():
@@ -89,12 +90,57 @@ def test_filter_by_lookup_property__count():
 
 
 def test_filter_by_lookup_property__case_6():
+    example = ExampleFactory.create(parts__far__number=1)
+
+    assert Example.objects.count() == 1
+    assert Example.objects.alias(case_6_alias=Example.case_6.expression).filter(case_6_alias="foo").first() == example
+    qs = Example.objects.filter(L(case_6="foo"))
+    assert qs.first() == example
+    assert Example.objects.filter(L(case_6="bar")).first() is None
+
+
+def test_filter_by_lookup_property__case_6__through_related_object__foreign_key():
+    example = ExampleFactory.create(parts__far__number=1)
+    assert Example.objects.count() == 1
+
+    total = Total.objects.first()
+    assert total.example == example
+
+    assert Total.objects.filter(L(example__case_6="foo")).first() == total
+    assert Total.objects.filter(L(example__case_6="bar")).first() is None
+
+
+def test_filter_by_lookup_property__case_6__through_related_object__many_to_many():
+    example = ExampleFactory.create(parts__far__number=1)
+    assert Example.objects.count() == 1
+
+    part = Part.objects.first()
+    assert part.examples.first() == example
+
+    assert Part.objects.filter(L(examples__case_6="foo")).first() == part
+    assert Part.objects.filter(L(examples__case_6="bar")).first() is None
+
+
+def test_filter_by_lookup_property__case_6__through_related_object__two_relations():
+    example = ExampleFactory.create(parts__far__number=1)
+    assert Example.objects.count() == 1
+
+    far = Far.objects.first()
+    assert far.parts.first().examples.first() == example
+
+    assert Far.objects.filter(L(parts__examples__case_6="foo")).first() == far
+    assert Far.objects.filter(L(parts__examples__case_6="bar")).first() is None
+
+
+def test_filter_by_lookup_property__case_6__with_lookups():
     ExampleFactory.create(parts__far__number=1)
-    assert Example.objects.filter(case_6=1).count() == 1
-    assert Example.objects.filter(case_6=0).count() == 0
+    assert Example.objects.filter(L(case_6__contains="foo")).count() == 1
+    assert Example.objects.filter(L(case_6__contains="bar")).count() == 0
 
 
 def test_filter_by_lookup_property__case_7():
     ExampleFactory.create(parts__number=1, parts__far__number=1)
-    assert Example.objects.filter(case_7=1).count() == 1
-    assert Example.objects.filter(case_7=0).count() == 0
+    assert Example.objects.count() == 1
+
+    assert Example.objects.filter(L(case_7="foo")).count() == 1
+    assert Example.objects.filter(L(case_7="bar")).count() == 0

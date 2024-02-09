@@ -94,6 +94,7 @@ class ExampleFactory(DjangoModelFactory):
             return
 
         if items is None and kwargs:
+            kwargs.setdefault("far__total__example", self)
             self.parts.add(PartFactory.create(**kwargs))
 
         for item in items or []:
