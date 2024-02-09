@@ -1,4 +1,7 @@
+from django.db.models import Q
+
 from lookup_property import L
+from lookup_property.expressions import extend_expression_to_joined_table
 from lookup_property.typing import random_arg_name
 from tests.example.models import Example
 
@@ -65,3 +68,45 @@ def test_l__contains():
     l_ref = L(foo="bar")
     assert ("foo" in l_ref) is True
     assert ("bar" in l_ref) is True
+
+
+def test_extend_expression_to_joined_table():
+    q1 = Q(foo="bar")
+    q2 = extend_expression_to_joined_table(q1, "example")
+
+    assert q2.children == [("example__foo", "bar")]
+
+
+def test_extend_expression_to_joined_table__two():
+    q1 = Q(foo="bar") & Q(fizz="buzz")
+    q2 = extend_expression_to_joined_table(q1, "example")
+
+    assert q2.children == [("example__foo", "bar"), ("example__fizz", "buzz")]
+
+
+def test_extend_expression_to_joined_table__two__or():
+    q1 = Q(foo="bar") | Q(fizz="buzz")
+    q2 = extend_expression_to_joined_table(q1, "example")
+
+    assert q2.children == [("example__foo", "bar"), ("example__fizz", "buzz")]
+
+
+def test_extend_expression_to_joined_table__three():
+    q1 = Q(foo="bar") & Q(fizz="buzz") & Q(one="two")
+    q2 = extend_expression_to_joined_table(q1, "example")
+
+    assert q2.children == [("example__foo", "bar"), ("example__fizz", "buzz"), ("example__one", "two")]
+
+
+def test_extend_expression_to_joined_table__child_is_another_q():
+    q1 = Q(foo="bar") & (Q(fizz="buzz") | Q(one="two"))
+    q2 = extend_expression_to_joined_table(q1, "example")
+
+    assert q2.children == [("example__foo", "bar"), Q(example__fizz="buzz") | Q(example__one="two")]
+
+
+def test_extend_expression_to_joined_table__contains_l_ref():
+    q1 = Q(L(foo="bar"))
+    q2 = extend_expression_to_joined_table(q1, "example")
+
+    assert q2.children == [("example__foo", "bar")]

@@ -110,8 +110,16 @@ def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr
         return models.F(f"{table_name}{LOOKUP_SEP}{expression.name}")
 
     if isinstance(expression, models.Q):
-        children: list[tuple[str, Any]] = expression.children  # type: ignore[assignment]
-        return models.Q(**{f"{table_name}{LOOKUP_SEP}{rest}": value for rest, value in children})
+        expression = deepcopy(expression)
+        children: list[tuple[str, Any] | models.Q] = expression.children  # type: ignore[assignment]
+        expression.children = []
+        for child in children:
+            if isinstance(child, models.Q):
+                expression.children.append(extend_expression_to_joined_table(child, table_name))
+            else:
+                expression.children.append((f"{table_name}{LOOKUP_SEP}{child[0]}", child[1]))
+
+        return expression
 
     expression = deepcopy(expression)
     expressions = [extend_expression_to_joined_table(expr, table_name) for expr in expression.get_source_expressions()]
