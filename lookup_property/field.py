@@ -74,7 +74,7 @@ class L:
         # See. `django.db.models.sql.query.Query.build_filter`
         self.conditional = True
 
-    def resolve_expression(self, query: Query, **kwargs: Any) -> Expr:  # noqa: ARG002
+    def resolve_expression(self, query: Query, *args: Any, **kwargs: Any) -> Expr:  # noqa: ARG002
         """Resolve lookup expression and build a lookup expression based on it."""
         field, lookup_parts, joined_tables = self.find_lookup_property_field(query)
         expression = field.expression
