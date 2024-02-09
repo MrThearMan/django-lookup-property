@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Iterator
 from django.db import models
 from django.db.models import ForeignObjectRel
 from django.db.models.constants import LOOKUP_SEP
+from django.db.models.expressions import BaseExpression
 from django.db.models.sql import Query
 
 from lookup_property.expressions import LookupPropertyCol, extend_expression_to_joined_table
@@ -62,41 +63,75 @@ class LookupPropertyField(models.Field):
 
 
 class L:
-    """Designate a lookup property as a filter condition."""
+    """
+    Designate a lookup property as a filter condition or values selection.
 
-    def __init__(self, **kwargs: Any) -> None:
-        if len(kwargs) != 1:  # pragma: no cover
+    Examples:
+
+    >>> qs.values(full_name_alias=L("full_name"))
+
+    >>> qs.values_list(L("full_name"), flat=True)
+
+    >>> qs.filter(L(full_name__contains="foo"))
+
+    >>> sq = qs_1.filter(name=OuterRef("full_name")).values("pk")
+    >>> qs_2.filter(id__in=L(models.Subquery(sq)))
+    """
+
+    def __init__(self, __ref: str | models.Subquery = "", /, **kwargs: Any) -> None:
+        if __ref:  # pragma: no cover
+            if kwargs:
+                msg = "Either one positional or keyword argument can be given."
+                raise ValueError(msg)
+
+            self.lookup = __ref
+
+        elif len(kwargs) != 1:  # pragma: no cover
             msg = "Exactly one keyword argument is required."
             raise ValueError(msg)
 
-        self.lookup, self.value = kwargs.popitem()
+        else:
+            self.lookup, self.value = kwargs.popitem()
 
-        # See. `django.db.models.sql.query.Query.build_filter`
-        self.conditional = True
+        self.conditional = True  # See. `django.db.models.sql.query.Query.build_filter`
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}({self.lookup}={self.value!r})"
+        if hasattr(self, "value"):
+            return f"{self.__class__.__name__}({self.lookup}={self.value!r})"
+        return f"{self.__class__.__name__}({self.lookup!r})"
 
     def __repr__(self) -> str:
         return str(self)
 
-    def __iter__(self) -> Iterator[tuple[str, Any]]:
-        return iter([self.lookup, self.value])
+    def __iter__(self) -> Iterator[tuple[str, Any] | str]:
+        if hasattr(self, "value"):
+            return iter([self.lookup, self.value])
+        return iter([self.lookup])
 
     def __len__(self) -> int:
-        return 2  # always represents a tuple of (lookup, value)
+        return len(list(iter(self)))
 
     def __getitem__(self, item: int) -> Any:
         return list(self)[item]
 
     def resolve_expression(self, query: Query, *args: Any, **kwargs: Any) -> Expr:  # noqa: ARG002
-        """Resolve lookup expression and build a lookup expression based on it."""
+        """Resolve lookup expression and either return it or build a lookup expression based on it."""
         field, lookup_parts, joined_tables = self.find_lookup_property_field(query)
         expression = field.expression
         for table_name in reversed(joined_tables):
             expression = extend_expression_to_joined_table(expression, table_name)
         expression = expression.resolve_expression(query)
-        return query.build_lookup(lookup_parts, expression, self.value)
+
+        # For sub-queries, save the resolved expression in place of the OuterRef.
+        if isinstance(self.lookup, models.Subquery):
+            self.lookup.query.where.children[0].rhs = expression  # type: ignore[attr-defined]
+            expression = self.lookup
+
+        if not hasattr(self, "value"):
+            return expression
+
+        value = self.value.resolve_expression(query) if isinstance(self.value, BaseExpression) else self.value
+        return query.build_lookup(lookup_parts, expression, value)
 
     def find_lookup_property_field(self, query: Query) -> tuple[LookupPropertyField, list[str], list[str]]:
         """
@@ -108,7 +143,13 @@ class L:
         (LookupPropertyField(<full_name>), ['contains'], ['example'])
         """
         joined_tables: list[str] = []
-        field_name, *lookup_parts = self.lookup.split(LOOKUP_SEP)
+        lookup = self.lookup
+
+        # For sub-queries, get the lookup from the sub-query's OuterRef.
+        if isinstance(lookup, models.Subquery):
+            lookup = lookup.query.where.children[0].rhs.name  # type: ignore[union-a]
+
+        field_name, *lookup_parts = lookup.split(LOOKUP_SEP)
 
         while True:
             field: LookupPropertyField = query.model._meta.get_field(field_name)

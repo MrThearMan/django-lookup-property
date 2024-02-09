@@ -30,7 +30,6 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Framework :: Django :: 4.1",
     "Framework :: Django :: 4.2",
     "Framework :: Django :: 5.0",
 ]
@@ -47,7 +46,7 @@ exclude = [
 
 [tool.poetry.dependencies]
 python = ">=3.11,<4"
-Django = ">=4.1"
+Django = ">=4.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = "8.0.0"
@@ -180,7 +179,7 @@ addopts = "-vv -s --log-cli-level=INFO"
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py{311, 312}-django{41, 42, 50}
+envlist = py{311, 312}-django{42, 50}
 isolated_build = true
 
 [gh-actions]
@@ -195,7 +194,6 @@ setenv =
     PYTHONPATH = {toxinidir}
     DJANGO_SETTINGS_MODULE = tests.project.settings
 deps =
-    django41: Django >=4.1,<4.2
     django42: Django >=4.2,<4.3
     django50: Django >=5.0,<5.1
 

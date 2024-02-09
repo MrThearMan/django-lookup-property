@@ -8,10 +8,11 @@ from typing import TYPE_CHECKING
 from django.db import models
 from django.db.models import sql
 from django.db.models.constants import LOOKUP_SEP
+from django.db.models.expressions import BaseExpression
 
 if TYPE_CHECKING:
     from django.db.backends.base.base import BaseDatabaseWrapper
-    from django.db.models.expressions import BaseExpression, Col
+    from django.db.models.expressions import Col
     from django.db.models.lookups import Lookup, Transform
     from django.db.models.sql.compiler import SQLCompiler
     from django.db.models.sql.datastructures import Join
@@ -121,7 +122,7 @@ def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr
             else:
                 value = (
                     extend_expression_to_joined_table(child[1], table_name)
-                    if isinstance(child[1], models.F)
+                    if isinstance(child[1], (models.F, models.Q, BaseExpression))
                     else child[1]
                 )
                 expression.children.append((f"{table_name}{LOOKUP_SEP}{child[0]}", value))
