@@ -74,6 +74,21 @@ class L:
         # See. `django.db.models.sql.query.Query.build_filter`
         self.conditional = True
 
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self.lookup}={self.value!r})"
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __iter__(self) -> Iterator[tuple[str, Any]]:
+        return iter([self.lookup, self.value])
+
+    def __len__(self) -> int:
+        return 2  # always represents a tuple of (lookup, value)
+
+    def __getitem__(self, item: int) -> Any:
+        return list(self)[item]
+
     def resolve_expression(self, query: Query, *args: Any, **kwargs: Any) -> Expr:  # noqa: ARG002
         """Resolve lookup expression and build a lookup expression based on it."""
         field, lookup_parts, joined_tables = self.find_lookup_property_field(query)
