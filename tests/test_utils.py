@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import F, Q
 
 from lookup_property import L
 from lookup_property.expressions import extend_expression_to_joined_table
@@ -110,3 +110,10 @@ def test_extend_expression_to_joined_table__contains_l_ref():
     q2 = extend_expression_to_joined_table(q1, "example")
 
     assert q2.children == [("example__foo", "bar")]
+
+
+def test_extend_expression_to_joined_table__value_is_f_ref():
+    q1 = Q(L(foo=F("bar")))
+    q2 = extend_expression_to_joined_table(q1, "example")
+
+    assert q2.children == [("example__foo", F("example__bar"))]

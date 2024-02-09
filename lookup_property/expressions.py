@@ -107,7 +107,9 @@ def expression_has_output_field(expression: Expr) -> bool:  # pragma: no cover
 def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr:
     """Rewrite the expression so that any containing F and Q expressions are referenced from the given table."""
     if isinstance(expression, models.F):
-        return models.F(f"{table_name}{LOOKUP_SEP}{expression.name}")
+        expression = deepcopy(expression)
+        expression.name = f"{table_name}{LOOKUP_SEP}{expression.name}"
+        return expression
 
     if isinstance(expression, models.Q):
         expression = deepcopy(expression)
@@ -117,7 +119,12 @@ def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr
             if isinstance(child, models.Q):
                 expression.children.append(extend_expression_to_joined_table(child, table_name))
             else:
-                expression.children.append((f"{table_name}{LOOKUP_SEP}{child[0]}", child[1]))
+                value = (
+                    extend_expression_to_joined_table(child[1], table_name)
+                    if isinstance(child[1], models.F)
+                    else child[1]
+                )
+                expression.children.append((f"{table_name}{LOOKUP_SEP}{child[0]}", value))
 
         return expression
 
