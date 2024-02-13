@@ -7,10 +7,10 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import ForeignObjectRel
 from django.db.models.constants import LOOKUP_SEP
-from django.db.models.expressions import BaseExpression
 from django.db.models.sql import Query
 
 from lookup_property.expressions import LookupPropertyCol, extend_expression_to_joined_table
+from lookup_property.typing import Sentinel
 
 if TYPE_CHECKING:
     from django.db.models.fields.related import ForeignObject, ManyToManyField
@@ -61,6 +61,12 @@ class LookupPropertyField(models.Field):
     ) -> None:
         # Register property on a concrete implementation of an abstract model
         self.target_property.contribute_to_class(cls, name, private_only=private_only)
+
+    def get_default(self) -> Any:
+        # Default value that makes sure `lookup_property.__get__`
+        # does not consider the field as set right after initialization.
+        # Called by `Model.__init__`.
+        return Sentinel
 
 
 class L:
@@ -115,14 +121,23 @@ class L:
     def __getitem__(self, item: int) -> Any:
         return list(self)[item]
 
-    def resolve_expression(self, query: Query, *args: Any, **kwargs: Any) -> Expr:  # noqa: ARG002
+    def resolve_expression(  # noqa: PLR0913
+        self,
+        query: Query,
+        allow_joins: bool,  # noqa: FBT001
+        reuse: Any = None,
+        summarize: bool = False,  # noqa: FBT001, FBT002
+        for_save: bool = False,  # noqa: ARG002, FBT001, FBT002
+    ) -> Expr:
         """Resolve lookup expression and either return it or build a lookup expression based on it."""
         field, lookup_parts, joined_tables = self.find_lookup_property_field(query)
         lookup_name = field.attname.removeprefix("_")
         expression = field.expression
         for table_name in reversed(joined_tables):
             expression = extend_expression_to_joined_table(expression, table_name)
-        expression = expression.resolve_expression(query)
+
+        query.add_annotation(expression, lookup_name, select=False)
+        expression = query.annotations[lookup_name]
 
         # For sub-queries, save the resolved expression in place of the OuterRef.
         if isinstance(self.lookup, models.Subquery):
@@ -134,7 +149,7 @@ class L:
         if not hasattr(self, "value"):
             return expression
 
-        value = self.value.resolve_expression(query) if isinstance(self.value, BaseExpression) else self.value
+        value = query.resolve_lookup_value(self.value, reuse, allow_joins, summarize)
         return query.build_lookup(lookup_parts, expression, value)
 
     def find_lookup_property_field(self, query: Query) -> tuple[LookupPropertyField, list[str], list[str]]:

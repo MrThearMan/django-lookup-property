@@ -381,6 +381,21 @@ class Example(models.Model):
     def _(self):
         return "foo" if self.parts.filter(number=1, far__number=1).exists() else "bar"
 
+    @lookup_property(joins=["parts"], skip_codegen=True, concrete=True)
+    def case_8(self):
+        return models.Case(
+            models.When(
+                models.Q(parts__far__number=1),
+                then=models.Value("foo"),
+            ),
+            default=models.Value("bar"),
+            output_field=models.CharField(),
+        )
+
+    @case_8.override
+    def _(self):
+        return "foo" if self.parts.filter(far__number=1).exists() else "bar"
+
     @lookup_property
     def cast_str(self):
         return functions.Cast("age", output_field=models.CharField())

@@ -49,6 +49,8 @@ Expr = BaseExpression | models.F | models.Q
 ModelMethod = Callable[[TModel], Expr]
 ConvertFunc = Callable[[Any, BaseExpression, BaseDatabaseWrapper], Any]
 
+Sentinel = object()
+
 
 def random_arg_name() -> str:
     return "".join(random.choices(string.ascii_lowercase, k=20))
@@ -71,6 +73,7 @@ class State:
     extra_kwargs: RandomKeyDict = field(default_factory=RandomKeyDict)
     joins: bool | list[str] = False
     skip_codegen: bool = False
+    concrete: bool = False
 
 
 class SelfNotUsable:  # pragma: no cover

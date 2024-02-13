@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, overload
 
 from .converters.main import ast_module_to_function, query_expression_ast_module
 from .field import LookupPropertyField
-from .typing import FunctionType, SelfNotUsable, State
+from .typing import FunctionType, SelfNotUsable, Sentinel, State
 
 if TYPE_CHECKING:
     from django.db import models
@@ -27,7 +27,7 @@ class lookup_property:  # noqa: N801
         """When using '@lookup_property'."""
 
     @overload
-    def __init__(self, *, joins: bool | list[str], use_tz: bool, skip_codegen: bool) -> None:
+    def __init__(self, *, joins: bool | list[str], use_tz: bool, skip_codegen: bool, concrete: bool) -> None:
         """When using '@lookup_property(...)' to set initial state."""
 
     def __init__(self, func: FunctionType | None = None, /, **kwargs: Any) -> None:
@@ -61,18 +61,23 @@ class lookup_property:  # noqa: N801
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.expression})"
 
-    def __get__(self, instance: models.Model | None, _) -> Any:  # noqa: ANN001
+    def __get__(self, instance: models.Model | None, model: type[models.Model] | None) -> Any:
         if instance is None:  # if called on class
             return self
+        cached_value = getattr(instance, self.field.attname, Sentinel)
+        if cached_value is not Sentinel:
+            return cached_value
         return self.func(instance)
 
     def __set__(self, instance: models.Model, value: Any) -> None:
-        pass
+        # Cache values from queryset annotations to avoid re-evaluating the property on instances.
+        # This does allow overriding the value manually, but that is not recommended.
+        setattr(instance, self.field.attname, value)
 
     def override(self, func: FunctionType) -> None:
         """Override generated function with a custom one."""
         if not self.state.skip_codegen:  # pragma: no cover
-            msg = "Override is only allowed when lookup property has skip_codegen=True"
+            msg = "Override is only allowed when lookup property was initialized with `skip_codegen=True`"
             raise ValueError(msg)
         self.func = func
         self.module = ast.parse(inspect.cleandoc(inspect.getsource(func)))
@@ -87,7 +92,7 @@ class lookup_property:  # noqa: N801
         field = LookupPropertyField(cls, target_property=self)
         field.set_attributes_from_name(name)
         field.name = field.attname = f"_{name}"  # Enable using aliases with the same name as the field
-        field.concrete = False  # Don't include field in `SELECT` statements
+        field.concrete = self.state.concrete  # if False -> Don't include field in `SELECT` statements
         cls._meta.add_field(field, private=True)
         setattr(cls, name, self)
 

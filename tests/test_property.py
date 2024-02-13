@@ -1,5 +1,6 @@
 import pytest
 
+from lookup_property.typing import Sentinel
 from tests.example.models import Example
 from tests.factories import AnotherConcreteFactory, ConcreteFactory, ExampleFactory, ThingFactory
 
@@ -29,7 +30,12 @@ def test_lookup_property__refresh_from_db():
 
 def test_lookup_property__set_attribute():
     example = ExampleFactory.create()
+    assert example.full_name == "foo bar"
+    # This is allowed, but discouraged.
     example.full_name = "fizz"
+    assert example.full_name == "fizz"
+    # This is a workaround to reset annotations
+    example.full_name = Sentinel
     assert example.full_name == "foo bar"
 
 

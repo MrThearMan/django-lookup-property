@@ -127,16 +127,16 @@ def test_filter_by_lookup_property__case_6():
 def test_filter_by_lookup_property__case_6__multiple(query_counter):
     ExampleFactory.create(parts__far__number=1)
     ExampleFactory.create(parts__far__number=1)
-    assert Example.objects.count() == 2
+    ExampleFactory.create(parts__far__number=1)
+    assert Example.objects.count() == 3
 
     query_counter.clear()
-
     list(Example.objects.alias(case_6=L("case_6")).filter(case_6="foo").all())
     assert len(query_counter) == 1
+    query_counter.clear()
 
-    # Aliasing first is more optimal at the moment
     list(Example.objects.filter(L(case_6="foo")).all())
-    assert len(query_counter) == 2
+    assert len(query_counter) == 1
 
 
 def test_filter_by_lookup_property__case_6__through_related_object__foreign_key():
@@ -180,7 +180,6 @@ def test_filter_by_lookup_property__case_6__with_lookups():
 
 def test_filter_by_lookup_property__case_6__values():
     ExampleFactory.create(parts__far__number=1)
-    # Not ideal, but must use an alias to avoid a collision with the `case_6` model field.
     assert list(Example.objects.values(case_6=L("case_6"))) == [{"case_6": "foo"}]
 
 
@@ -200,12 +199,34 @@ def test_filter_by_lookup_property__case_6__values_list_flat():
     assert list(Example.objects.values_list(L("case_6"), flat=True)) == ["foo"]
 
 
+def test_filter_by_lookup_property__case_6__annotated(query_counter):
+    ExampleFactory.create(parts__far__number=1)
+
+    query_counter.clear()
+    examples = list(Example.objects.annotate(case_6=L("case_6")))
+    assert len(query_counter) == 1
+    # The value has been annotated in the queryset, so we don't need to calculate it again.
+    assert examples[0].case_6 == "foo"
+    assert len(query_counter) == 1
+
+
 def test_filter_by_lookup_property__case_7():
     ExampleFactory.create(parts__number=1, parts__far__number=1)
     assert Example.objects.count() == 1
 
     assert Example.objects.filter(L(case_7="foo")).count() == 1
     assert Example.objects.filter(L(case_7="bar")).count() == 0
+
+
+def test_filter_by_lookup_property__case_8__concrete(query_counter):
+    ExampleFactory.create(parts__far__number=1)
+
+    query_counter.clear()
+    examples = list(Example.objects.all())
+    assert len(query_counter) == 1
+    # Concrete field was fetched with the rest of the fields
+    assert examples[0].case_8 == "foo"
+    assert len(query_counter) == 1
 
 
 def test_filter_by_lookup_property__subquery_property():
