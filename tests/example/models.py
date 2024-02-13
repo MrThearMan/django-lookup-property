@@ -336,7 +336,7 @@ class Example(models.Model):
             output_field=models.CharField(),
         )
 
-    @lookup_property
+    @lookup_property(skip_codegen=True)
     def case_5(self):
         return models.Case(
             models.When(
@@ -351,7 +351,7 @@ class Example(models.Model):
     def _(self):
         return "foo" if self.totals.filter(number=1).exists() else "bar"
 
-    @lookup_property(joins=["parts"])
+    @lookup_property(joins=["parts"], skip_codegen=True)
     def case_6(self):
         return models.Case(
             models.When(
@@ -366,7 +366,7 @@ class Example(models.Model):
     def _(self):
         return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 
-    @lookup_property(joins=["parts"])
+    @lookup_property(joins=["parts"], skip_codegen=True)
     def case_7(self):
         return models.Case(
             models.When(
@@ -758,6 +758,14 @@ class Example(models.Model):
     @lookup_property
     def variance(self):
         return aggregates.Variance("number")
+
+    @lookup_property(skip_codegen=True)
+    def subquery(self):
+        return models.Subquery(Thing.objects.filter(example=models.OuterRef("pk")).values("number")[:1])
+
+    @subquery.override
+    def _(self):
+        return self.thing.number
 
 
 class Far(models.Model):

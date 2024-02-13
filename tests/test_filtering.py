@@ -182,3 +182,11 @@ def test_filter_by_lookup_property__case_7():
 
     assert Example.objects.filter(L(case_7="foo")).count() == 1
     assert Example.objects.filter(L(case_7="bar")).count() == 0
+
+
+def test_filter_by_lookup_property__subquery_property():
+    example = ExampleFactory.create()
+    ThingFactory.create(example=example, number=1)
+
+    assert Example.objects.filter(L(subquery=1)).count() == 1
+    assert Example.objects.filter(L(subquery=2)).count() == 0

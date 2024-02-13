@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING, overload
 
 from .converters.main import ast_module_to_function, query_expression_ast_module
 from .field import LookupPropertyField
-from .typing import FunctionType, State
+from .typing import FunctionType, SelfNotUsable, State
 
 if TYPE_CHECKING:
     from django.db import models
 
-    from .typing import Any, Expr, Self
+    from .typing import Any, Callable, Expr, Self
 
 __all__ = [
     "lookup_property",
@@ -27,7 +27,7 @@ class lookup_property:  # noqa: N801
         """When using '@lookup_property'."""
 
     @overload
-    def __init__(self, *, joins: bool | list[str] = ..., use_tz: bool = ..., skip_codegen: bool) -> None:
+    def __init__(self, *, joins: bool | list[str], use_tz: bool, skip_codegen: bool) -> None:
         """When using '@lookup_property(...)' to set initial state."""
 
     def __init__(self, func: FunctionType | None = None, /, **kwargs: Any) -> None:
@@ -38,7 +38,7 @@ class lookup_property:  # noqa: N801
             self.state = State(**kwargs)
 
         if isinstance(func, FunctionType):
-            self.expression: Expr = func(None)
+            self._expression: Callable[[], Expr] = lambda: func(SelfNotUsable)
             if self.state.skip_codegen:
                 return
 
@@ -71,6 +71,9 @@ class lookup_property:  # noqa: N801
 
     def override(self, func: FunctionType) -> None:
         """Override generated function with a custom one."""
+        if not self.state.skip_codegen:  # pragma: no cover
+            msg = "Override is only allowed when lookup property has skip_codegen=True"
+            raise ValueError(msg)
         self.func = func
         self.module = ast.parse(inspect.cleandoc(inspect.getsource(func)))
 
@@ -91,3 +94,7 @@ class lookup_property:  # noqa: N801
     def func_source(self) -> str:
         """Return the source code generated from the decorated function return expression."""
         return ast.unparse(self.module)
+
+    @cached_property
+    def expression(self) -> Expr:
+        return self._expression()

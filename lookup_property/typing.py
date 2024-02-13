@@ -2,7 +2,20 @@ import random
 import string
 from dataclasses import dataclass, field
 from types import FunctionType
-from typing import Any, Callable, Collection, Concatenate, Iterable, Literal, ParamSpec, Protocol, Self, TypeVar, cast
+from typing import (
+    Any,
+    Callable,
+    Collection,
+    Concatenate,
+    Iterable,
+    Literal,
+    NoReturn,
+    ParamSpec,
+    Protocol,
+    Self,
+    TypeVar,
+    cast,
+)
 
 from django.conf import settings
 from django.db import models
@@ -56,3 +69,12 @@ class State:
     extra_kwargs: RandomKeyDict = field(default_factory=RandomKeyDict)
     joins: bool | list[str] = False
     skip_codegen: bool = False
+
+
+class SelfNotUsable:  # pragma: no cover
+    def __getattr__(self, item: Any) -> NoReturn:
+        msg = "Lookup properties cannot use instance attributes. Refer to instance attributes with F() expressions."
+        raise ValueError(msg)
+
+
+SelfNotUsable = SelfNotUsable()

@@ -168,9 +168,10 @@ class L:
             # join those tables to the query object before returning the field,
             # but only if the lookup was wound from a related model.
             if joined_tables and isinstance(field.target_property.state.joins, list):
-                joins = field.target_property.state.joins
-                fields_map = query.model._meta.fields_map
-                tables: list[str] = [fields_map.get(join).related_model._meta.db_table for join in joins]
+                tables: list[str] = [
+                    query.model._meta.get_field(join).related_model._meta.db_table
+                    for join in field.target_property.state.joins
+                ]
                 for table in tables:
                     query.join(query.base_table_class(table, None))
 

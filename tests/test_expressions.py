@@ -1,6 +1,6 @@
 import pytest
 
-from tests.factories import ExampleFactory, TotalFactory
+from tests.factories import ExampleFactory, TotalFactory, ThingFactory
 
 pytestmark = [
     pytest.mark.django_db,
@@ -282,3 +282,9 @@ def test_lookup_property__nullif():
 def test_lookup_property__nullif__equal():
     example = ExampleFactory.create(last_name="foo")
     assert example.nullif is None
+
+
+def test_lookup_property__subquery():
+    example = ExampleFactory.create()
+    ThingFactory.create(example=example, number=12)
+    assert example.subquery == 12
