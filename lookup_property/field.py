@@ -3,6 +3,7 @@ from __future__ import annotations
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Iterator
 
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import ForeignObjectRel
 from django.db.models.constants import LOOKUP_SEP
@@ -117,6 +118,7 @@ class L:
     def resolve_expression(self, query: Query, *args: Any, **kwargs: Any) -> Expr:  # noqa: ARG002
         """Resolve lookup expression and either return it or build a lookup expression based on it."""
         field, lookup_parts, joined_tables = self.find_lookup_property_field(query)
+        lookup_name = field.attname.removeprefix("_")
         expression = field.expression
         for table_name in reversed(joined_tables):
             expression = extend_expression_to_joined_table(expression, table_name)
@@ -124,7 +126,9 @@ class L:
 
         # For sub-queries, save the resolved expression in place of the OuterRef.
         if isinstance(self.lookup, models.Subquery):
-            self.lookup.query.where.children[0].rhs = expression  # type: ignore[attr-defined]
+            for child in self.lookup.query.where.children:
+                if getattr(getattr(child, "rhs", None), "name", None) == lookup_name:
+                    child.rhs = expression
             expression = self.lookup
 
         if not hasattr(self, "value"):
@@ -152,7 +156,11 @@ class L:
         field_name, *lookup_parts = lookup.split(LOOKUP_SEP)
 
         while True:
-            field: LookupPropertyField = query.model._meta.get_field(field_name)
+            try:
+                field: LookupPropertyField = query.model._meta.get_field(field_name)
+            except FieldDoesNotExist:
+                # Lookup fields are prefixed with "_" to enable aliasing with the same name.
+                field: LookupPropertyField = query.model._meta.get_field(f"_{field_name}")
 
             # If the field is not a lookup property, it should be a related field.
             # Keep track of the joined table, switch the query object to the related object,

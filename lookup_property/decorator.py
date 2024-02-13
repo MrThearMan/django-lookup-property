@@ -86,9 +86,10 @@ class lookup_property:  # noqa: N801
         # Called by `django.db.models.base.ModelBase.add_to_class`
         field = LookupPropertyField(cls, target_property=self)
         field.set_attributes_from_name(name)
+        field.name = field.attname = f"_{name}"  # Enable using aliases with the same name as the field
         field.concrete = False  # Don't include field in `SELECT` statements
         cls._meta.add_field(field, private=True)
-        setattr(cls, field.attname, self)
+        setattr(cls, name, self)
 
     @cached_property
     def func_source(self) -> str:
