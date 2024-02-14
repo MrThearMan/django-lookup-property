@@ -110,18 +110,18 @@ def test_extend_expression_to_joined_table__contains_l_ref():
     q1 = Q(L(foo="bar"))
     q2 = extend_expression_to_joined_table(q1, "example")
 
-    assert q2.children == [("example__foo", "bar")]
+    assert str(q2.children) == "[L(example__foo='bar')]"
 
 
 def test_extend_expression_to_joined_table__value_is_f_ref():
     q1 = Q(L(foo=F("bar")))
     q2 = extend_expression_to_joined_table(q1, "example")
 
-    assert q2.children == [("example__foo", F("example__bar"))]
+    assert str(q2.children) == "[L(example__foo=F(example__bar))]"
 
 
 def test_extend_expression_to_joined_table__value_is_func():
     q1 = Q(L(foo=Upper("bar")))
     q2 = extend_expression_to_joined_table(q1, "example")
 
-    assert str(q2.children) == "[('example__foo', Upper(F(example__bar)))]"
+    assert str(q2.children) == "[L(example__foo=Upper(F(example__bar)))]"

@@ -3,12 +3,14 @@ from __future__ import annotations
 from contextlib import suppress
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator
 
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import sql
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.expressions import BaseExpression
+from django.db.models.sql import Query
 
 if TYPE_CHECKING:
     from django.db.backends.base.base import BaseDatabaseWrapper
@@ -24,6 +26,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "LookupPropertyCol",
+    "L",
 ]
 
 
@@ -95,6 +98,142 @@ class LookupPropertyCol(models.Expression):
         return super().convert_value
 
 
+class L:
+    """
+    Designate a lookup property as a filter condition or values selection.
+
+    Examples:
+
+    >>> qs.values(full_name_alias=L("full_name"))
+
+    >>> qs.values_list(L("full_name"), flat=True)
+
+    >>> qs.filter(L(full_name__contains="foo"))
+
+    >>> sq = qs_1.filter(name=OuterRef("full_name")).values("pk")
+    >>> qs_2.filter(id__in=L(models.Subquery(sq)))
+    """
+
+    def __init__(self, __ref: str | models.Subquery = "", /, **kwargs: Any) -> None:
+        if __ref:  # pragma: no cover
+            if kwargs:
+                msg = "Either one positional or keyword argument can be given."
+                raise ValueError(msg)
+
+            self.lookup = __ref
+
+        elif len(kwargs) != 1:  # pragma: no cover
+            msg = "Exactly one keyword argument is required."
+            raise ValueError(msg)
+
+        else:
+            self.lookup, self.value = kwargs.popitem()
+
+        self.conditional = True  # See. `django.db.models.sql.query.Query.build_filter`
+
+    def __str__(self) -> str:
+        if hasattr(self, "value"):
+            return f"{self.__class__.__name__}({self.lookup}={self.value!r})"
+        return f"{self.__class__.__name__}({self.lookup!r})"
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __iter__(self) -> Iterator[tuple[str, Any] | str]:
+        if hasattr(self, "value"):
+            return iter([self.lookup, self.value])
+        return iter([self.lookup])
+
+    def __len__(self) -> int:
+        return len(list(iter(self)))
+
+    def __getitem__(self, item: int) -> Any:
+        return list(self)[item]
+
+    def resolve_expression(  # noqa: PLR0913
+        self,
+        query: Query,
+        allow_joins: bool,  # noqa: FBT001
+        reuse: Any = None,
+        summarize: bool = False,  # noqa: FBT001, FBT002
+        for_save: bool = False,  # noqa: ARG002, FBT001, FBT002
+    ) -> Expr:
+        """Resolve lookup expression and either return it or build a lookup expression based on it."""
+        field, lookup_parts, joined_tables = self.find_lookup_property_field(query)
+        lookup_name = field.attname.removeprefix("_")
+        expression = field.expression
+        for table_name in reversed(joined_tables):
+            expression = extend_expression_to_joined_table(expression, table_name)
+
+        query.add_annotation(expression, lookup_name, select=False)
+        expression = query.annotations[lookup_name]
+
+        # For sub-queries, save the resolved expression in place of the OuterRef.
+        if isinstance(self.lookup, models.Subquery):
+            for child in self.lookup.query.where.children:
+                if getattr(getattr(child, "rhs", None), "name", None) == lookup_name:
+                    child.rhs = expression
+            expression = self.lookup
+
+        if not hasattr(self, "value"):
+            return expression
+
+        value = query.resolve_lookup_value(self.value, reuse, allow_joins, summarize)
+        return query.build_lookup(lookup_parts, expression, value)
+
+    def find_lookup_property_field(self, query: Query) -> tuple[LookupPropertyField, list[str], list[str]]:
+        """
+        Find the lookup property field based on the given keyword argument.
+        Separate any lookup parts afte and tables before the field name.
+
+        >>> l = L(example__full_name__contains="foo")
+        >>> l.find_lookup_property_field(query)
+        (LookupPropertyField(<full_name>), ['contains'], ['example'])
+        """
+        from .field import LookupPropertyField
+
+        joined_tables: list[str] = []
+        lookup = self.lookup
+
+        # For sub-queries, get the lookup from the sub-query's OuterRef.
+        if isinstance(lookup, models.Subquery):
+            lookup = lookup.query.where.children[0].rhs.name  # type: ignore[union-a]
+
+        field_name, *lookup_parts = lookup.split(LOOKUP_SEP)
+
+        while True:
+            try:
+                field: LookupPropertyField = query.model._meta.get_field(field_name)
+            except FieldDoesNotExist:
+                # Lookup fields are prefixed with "_" to enable aliasing with the same name.
+                field: LookupPropertyField = query.model._meta.get_field(f"_{field_name}")
+
+            # If the field is not a lookup property, it should be a related field.
+            # Keep track of the joined table, switch the query object to the related object,
+            # and continue looking for the lookup property field from the next lookup part.
+            if not isinstance(field, LookupPropertyField):
+                query.join(query.base_table_class(query.model._meta.db_table, query.model._meta.db_table))
+                joined_tables.append(field_name)
+                query = Query(model=field.related_model)  # type: ignore[union-attr]
+                field_name, lookup_parts = lookup_parts[0], lookup_parts[1:]
+                continue
+
+            # If the field is a lookup property, and joins have been defined for it,
+            # join those tables to the query object before returning the field,
+            # but only if the lookup was wound from a related model.
+            if joined_tables and isinstance(field.target_property.state.joins, list):
+                tables: list[str] = [
+                    query.model._meta.get_field(join).related_model._meta.db_table
+                    for join in field.target_property.state.joins
+                ]
+                for table in tables:
+                    query.join(query.base_table_class(table, table))
+
+            break
+
+        return field, lookup_parts, joined_tables
+
+
 def expression_has_output_field(expression: Expr) -> bool:  # pragma: no cover
     # Check whether the 'output_field' of the expression can be resolved.
     # This might fail, and does fail for expressions like Trunc if the 'output_field'
@@ -112,12 +251,23 @@ def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr
         expression.name = f"{table_name}{LOOKUP_SEP}{expression.name}"
         return expression
 
+    if isinstance(expression, L):
+        expression = deepcopy(expression)
+        expression.lookup = f"{table_name}{LOOKUP_SEP}{expression.lookup}"
+        if hasattr(expression, "value"):
+            expression.value = (
+                extend_expression_to_joined_table(expression.value, table_name)
+                if isinstance(expression.value, (models.F, models.Q, BaseExpression))
+                else expression.value
+            )
+        return expression
+
     if isinstance(expression, models.Q):
         expression = deepcopy(expression)
         children: list[tuple[str, Any] | models.Q] = expression.children  # type: ignore[assignment]
         expression.children = []
         for child in children:
-            if isinstance(child, models.Q):
+            if isinstance(child, (models.Q, L)):
                 expression.children.append(extend_expression_to_joined_table(child, table_name))
             else:
                 value = (

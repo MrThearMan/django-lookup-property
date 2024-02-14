@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models import aggregates, functions
 from django.db.models.functions import MD5, Random
 
-from lookup_property import lookup_property
+from lookup_property import lookup_property, L
 
 
 class Other(models.Model):
@@ -393,6 +393,25 @@ class Example(models.Model):
         )
 
     @case_8.override
+    def _(self):
+        return "foo" if self.parts.filter(far__number=1).exists() else "bar"
+
+    @lookup_property(joins=["parts"])
+    def reffed_by_another_lookup(self):
+        return models.F("parts__far__number")
+
+    @lookup_property(joins=["parts"], skip_codegen=True)
+    def refs_another_lookup(self):
+        return models.Case(
+            models.When(
+                models.Q(L(reffed_by_another_lookup=1)),
+                then=models.Value("foo"),
+            ),
+            default=models.Value("bar"),
+            output_field=models.CharField(),
+        )
+
+    @refs_another_lookup.override
     def _(self):
         return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 

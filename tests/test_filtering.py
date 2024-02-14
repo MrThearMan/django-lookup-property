@@ -2,7 +2,7 @@ import pytest
 from django.db import models
 from django.db.models.functions import Lower, Upper
 
-from lookup_property.field import L
+from lookup_property import L
 from tests.example.models import Example, Far, Other, Part, Thing, Total
 from tests.factories import ExampleFactory, OtherFactory, PartFactory, ThingFactory
 
@@ -235,3 +235,18 @@ def test_filter_by_lookup_property__subquery_property():
 
     assert Example.objects.filter(L(subquery=1)).count() == 1
     assert Example.objects.filter(L(subquery=2)).count() == 0
+
+
+def test_filter_by_lookup_property__refs_another_lookup():
+    ExampleFactory.create(parts__far__number=1)
+
+    assert Example.objects.filter(L(refs_another_lookup="foo")).count() == 1
+    assert Example.objects.filter(L(refs_another_lookup="bar")).count() == 0
+
+
+def test_filter_by_lookup_property__refs_another_lookup__from_another_lookup():
+    example = ExampleFactory.create(parts__far__number=1)
+    ThingFactory.create(example=example)
+
+    assert Thing.objects.filter(L(example__refs_another_lookup="foo")).count() == 1
+    assert Thing.objects.filter(L(example__refs_another_lookup="bar")).count() == 0
