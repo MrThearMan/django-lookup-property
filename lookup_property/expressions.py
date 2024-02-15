@@ -168,6 +168,10 @@ class L:
         query.add_annotation(expression, lookup_name, select=False)
         expression = query.annotations[lookup_name]
 
+        # Check whether the query should be grouped by the lookup expression.
+        if expression.contains_aggregate:
+            query.group_by = True
+
         # For sub-queries, save the resolved expression in place of the OuterRef.
         if isinstance(self.lookup, models.Subquery):
             for child in self.lookup.query.where.children:

@@ -250,3 +250,13 @@ def test_filter_by_lookup_property__refs_another_lookup__from_another_lookup():
 
     assert Thing.objects.filter(L(example__refs_another_lookup="foo")).count() == 1
     assert Thing.objects.filter(L(example__refs_another_lookup="bar")).count() == 0
+
+
+def test_filter_by_lookup_property__count__aggregate_needs_group_by():
+    example = ExampleFactory.create()
+
+    # Can also alias beforehand
+    assert Example.objects.alias(count_field=L("count_field")).filter(count_field=1).first() == example
+
+    assert Example.objects.filter(L(count_field=1)).first() == example
+    assert Example.objects.filter(L(count_field=0)).first() is None
