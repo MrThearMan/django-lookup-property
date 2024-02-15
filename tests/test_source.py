@@ -1366,3 +1366,12 @@ def test_lookup_property__variance__source():
             return self.__class__.objects.aggregate(arg18=arg18())['arg18']
         """,
     )
+
+
+def test_lookup_property__refs_another_lookup__source():
+    assert Example.refs_another_lookup.func_source == cleandoc(
+        """
+        def refs_another_lookup(self):
+            return 'foo' if self.reffed_by_another_lookup == 1 else 'bar'
+        """,
+    )

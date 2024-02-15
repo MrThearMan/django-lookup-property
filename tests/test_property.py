@@ -67,3 +67,8 @@ def test_lookup_property__abstract_and_concrete_models__deep():
     assert concrete.abstract_property == "abstract property"
     assert concrete.another_abstract_property == "another abstract property"
     assert concrete.another_concrete_field == "another concrete property"
+
+
+def test_lookup_property__refs_another_lookup():
+    example = ExampleFactory.create(parts__far__number=1)
+    assert example.refs_another_lookup == "foo"

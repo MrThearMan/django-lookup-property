@@ -6,6 +6,7 @@ from django.db.models import lookups
 from django.db.models.constants import LOOKUP_SEP
 
 from ..dispatch import lookup_singledispatch
+from ..expressions import L
 from ..typing import State
 from .expressions import expression_to_ast
 from .utils import ast_method, ast_property
@@ -13,6 +14,19 @@ from .utils import ast_method, ast_property
 __all__ = [
     "lookup_to_ast",
 ]
+
+
+@expression_to_ast.register
+def _(expression: L, state: State) -> ast.AST:
+    """
+    L("foo") -> self.foo
+    L(foo="bar") -> self.foo == "bar"
+    L(foo__endswith="bar") -> self.foo.endswith("bar")
+    """
+    if not hasattr(expression, "value"):
+        return ast_property(*expression.lookup.split(LOOKUP_SEP))
+
+    return to_lookup_comparison(attr=expression.lookup, value=expression.value, state=state)
 
 
 @expression_to_ast.register

@@ -396,11 +396,15 @@ class Example(models.Model):
     def _(self):
         return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 
-    @lookup_property(joins=["parts"])
+    @lookup_property(joins=["thing"], skip_codegen=True)
     def reffed_by_another_lookup(self):
         return models.F("parts__far__number")
 
-    @lookup_property(joins=["parts"], skip_codegen=True)
+    @reffed_by_another_lookup.override
+    def _(self):
+        return self.parts.values_list("far__number", flat=True).first()
+
+    @lookup_property
     def refs_another_lookup(self):
         return models.Case(
             models.When(
@@ -410,10 +414,6 @@ class Example(models.Model):
             default=models.Value("bar"),
             output_field=models.CharField(),
         )
-
-    @refs_another_lookup.override
-    def _(self):
-        return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 
     @lookup_property
     def cast_str(self):
