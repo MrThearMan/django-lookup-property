@@ -625,6 +625,10 @@ class Example(models.Model):
         return models.Q(first_name="foo")
 
     @lookup_property
+    def q_rel(self):
+        return models.Q(thing__name="foo")
+
+    @lookup_property
     def q_neg(self):
         return ~models.Q(first_name="foo")
 

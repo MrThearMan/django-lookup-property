@@ -39,6 +39,15 @@ def test_l__unpack():
     assert value == "bar"
 
 
+def test_l__iter():
+    it = iter(L(foo="bar"))
+    assert next(it) == "foo"
+    assert next(it) == "bar"
+
+    it = iter(L("bar"))
+    assert next(it) == "bar"
+
+
 def test_l__index():
     l_ref = L(foo="bar")
     assert l_ref[0] == "foo"
@@ -48,11 +57,15 @@ def test_l__index():
 def test_l__str():
     l_ref = L(foo="bar")
     assert str(l_ref) == "L(foo='bar')"
+    l_ref = L("bar")
+    assert str(l_ref) == "L('bar')"
 
 
 def test_l__repr():
     l_ref = L(foo="bar")
     assert repr(l_ref) == "L(foo='bar')"
+    l_ref = L("bar")
+    assert repr(l_ref) == "L('bar')"
 
 
 def test_l__len():

@@ -1,6 +1,6 @@
 import pytest
 
-from tests.factories import ExampleFactory
+from tests.factories import ExampleFactory, ThingFactory
 
 pytestmark = [
     pytest.mark.django_db,
@@ -10,6 +10,12 @@ pytestmark = [
 def test_lookup_property__q():
     example = ExampleFactory.create()
     assert example.q is True
+
+
+def test_lookup_property__q_rel():
+    example = ExampleFactory.create()
+    ThingFactory.create(name="foo", example=example)
+    assert example.q_rel is True
 
 
 def test_lookup_property__q_neg():

@@ -170,6 +170,8 @@ exclude_lines = [
     "except ImportError:",
     "pragma: no cover",
     "pass",
+    "def __repr__",
+    "def __str__",
 ]
 
 [tool.pytest.ini_options]
