@@ -9,7 +9,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import sql
 from django.db.models.constants import LOOKUP_SEP
-from django.db.models.expressions import BaseExpression
+from django.db.models.expressions import BaseExpression, ResolvedOuterRef
 from django.db.models.sql import Query
 
 if TYPE_CHECKING:
@@ -268,7 +268,7 @@ def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr
 
     if isinstance(expression, models.Q):
         expression = deepcopy(expression)
-        children: list[tuple[str, Any] | models.Q] = expression.children  # type: ignore[assignment]
+        children: list[tuple[str, Any] | models.Q | L] = expression.children  # type: ignore[assignment]
         expression.children = []
         for child in children:
             if isinstance(child, (models.Q, L)):
@@ -283,7 +283,28 @@ def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr
 
         return expression
 
+    # For sub-queries, only OuterRefs are rewritten.
+    if isinstance(expression, models.Subquery):
+        expression = deepcopy(expression)
+        sub_expressions: list[Expr] = expression.query.where.children
+        expression.query.where.children = []
+        for child in sub_expressions:
+            expression.query.where.children.append(extend_subquery_to_joined_table(child, table_name))
+        return expression
+
     expression = deepcopy(expression)
     expressions = [extend_expression_to_joined_table(expr, table_name) for expr in expression.get_source_expressions()]
-    expression.set_source_expressions(expressions)  # type: ignore[arg-type]
+    expression.set_source_expressions(expressions)
+    return expression
+
+
+def extend_subquery_to_joined_table(expression: Expr, table_name: str) -> Expr:
+    if isinstance(expression, (models.OuterRef, ResolvedOuterRef)):
+        expression = deepcopy(expression)
+        expression.name = f"{table_name}{LOOKUP_SEP}{expression.name}"
+        return expression
+
+    expression = deepcopy(expression)
+    expressions = [extend_subquery_to_joined_table(expr, table_name) for expr in expression.get_source_expressions()]
+    expression.set_source_expressions(expressions)
     return expression

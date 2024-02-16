@@ -4,7 +4,7 @@ from django.db.models.functions import Lower, Upper
 
 from lookup_property import L
 from tests.example.models import Example, Far, Other, Part, Thing, Total
-from tests.factories import ExampleFactory, OtherFactory, PartFactory, ThingFactory
+from tests.factories import ExampleFactory, OtherFactory, PartFactory, ThingFactory, TotalFactory
 
 pytestmark = [
     pytest.mark.django_db,
@@ -235,6 +235,24 @@ def test_filter_by_lookup_property__subquery_property():
 
     assert Example.objects.filter(L(subquery=1)).count() == 1
     assert Example.objects.filter(L(subquery=2)).count() == 0
+
+
+def test_filter_by_lookup_property__exists_property():
+    example = ExampleFactory.create()
+    TotalFactory.create(example=example, number=1)
+    TotalFactory.create(example=example, number=1)
+
+    assert Example.objects.filter(L(exists=True)).count() == 1
+    assert Example.objects.filter(L(exists=False)).count() == 0
+
+
+def test_filter_by_lookup_property__exists_property__from_related_model():
+    example = ExampleFactory.create()
+    TotalFactory.create(example=example, number=1)
+    TotalFactory.create(example=example, number=1)
+
+    assert Total.objects.filter(L(example__exists=True)).count() == 2
+    assert Total.objects.filter(L(example__exists=False)).count() == 0
 
 
 def test_filter_by_lookup_property__refs_another_lookup():

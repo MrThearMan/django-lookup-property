@@ -805,6 +805,14 @@ class Example(models.Model):
     def _(self):
         return self.thing.number
 
+    @lookup_property(skip_codegen=True)
+    def exists(self):
+        return models.Exists(Total.objects.filter(example=models.OuterRef("pk"), number=1))
+
+    @exists.override
+    def _(self):
+        return Total.objects.filter(example=self, number=1).exists()
+
 
 class Far(models.Model):
     name = models.CharField(max_length=256)
