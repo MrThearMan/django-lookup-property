@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models import aggregates, functions
 from django.db.models.functions import MD5, Random
 
-from lookup_property import lookup_property, L
+from lookup_property import L, lookup_property
 
 
 class Other(models.Model):
@@ -30,7 +30,7 @@ class Example(models.Model):
     children = models.ManyToManyField(Child, related_name="examples")
 
     @lookup_property()
-    def full_name(self):
+    def full_name():
         return functions.Concat(
             models.F("first_name"),
             models.Value(" "),
@@ -39,162 +39,162 @@ class Example(models.Model):
         )
 
     @lookup_property
-    def name(self):
+    def name():
         return models.F("full_name")
 
     @lookup_property
-    def f_ref(self):
+    def f_ref():
         return models.F("first_name")
 
     @lookup_property
-    def combined_expression_add(self):
+    def combined_expression_add():
         return models.F("age") + 2
 
     @lookup_property
-    def combined_expression_div(self):
+    def combined_expression_div():
         return models.F("age") / 2
 
     @lookup_property
-    def combined_expression_mod(self):
+    def combined_expression_mod():
         return models.F("age") % 2
 
     @lookup_property
-    def combined_expression_mult(self):
+    def combined_expression_mult():
         return models.F("age") * 2
 
     @lookup_property
-    def combined_expression_pow(self):
+    def combined_expression_pow():
         return models.F("age") ** 2
 
     @lookup_property
-    def combined_expression_sub(self):
+    def combined_expression_sub():
         return models.F("age") - 2
 
     @lookup_property
-    def expression_wrapper(self):
+    def expression_wrapper():
         return models.ExpressionWrapper(
             models.F("first_name") * 2,
             output_field=models.CharField(),
         )
 
-    @lookup_property(joins=True)
-    def forward_one_to_one(self):
+    @lookup_property(joins=["question"])
+    def forward_one_to_one():
         return models.F("question__pk")
 
-    @lookup_property(joins=True)
-    def reverse_one_to_one(self):
+    @lookup_property(joins=["thing"])
+    def reverse_one_to_one():
         return models.F("thing__pk")
 
-    @lookup_property(joins=True)
-    def forward_many_to_one(self):
+    @lookup_property(joins=["other"])
+    def forward_many_to_one():
         return models.F("other__pk")
 
-    @lookup_property(joins=True, skip_codegen=True)
-    def reverse_one_to_many(self):
+    @lookup_property(joins=["totals"], skip_codegen=True)
+    def reverse_one_to_many():
         return models.F("totals__pk")
 
     @reverse_one_to_many.override
     def _(self):
         return self.totals.values_list("pk", flat=True).first()
 
-    @lookup_property(joins=True, skip_codegen=True)
-    def forward_many_to_many(self):
+    @lookup_property(joins=["children"], skip_codegen=True)
+    def forward_many_to_many():
         return models.F("children__pk")
 
     @forward_many_to_many.override
     def _(self):
         return self.children.values_list("pk", flat=True).first()
 
-    @lookup_property(joins=True, skip_codegen=True)
-    def reverse_many_to_many(self):
+    @lookup_property(joins=["parts"], skip_codegen=True)
+    def reverse_many_to_many():
         return models.F("parts__pk")
 
     @reverse_many_to_many.override
     def _(self):
         return self.parts.values_list("pk", flat=True).first()
 
-    @lookup_property(joins=True)
-    def double_join(self):
+    @lookup_property(joins=["thing"])
+    def double_join():
         return models.F("thing__far__pk")
 
     @lookup_property
-    def now(self):
+    def now():
         return functions.Now()
 
     @lookup_property
-    def trunc(self):
+    def trunc():
         return functions.Trunc("timestamp", "year")
 
     @lookup_property
-    def trunc_year(self):
+    def trunc_year():
         return functions.TruncYear("timestamp")
 
     @lookup_property
-    def trunc_month(self):
+    def trunc_month():
         return functions.TruncMonth("timestamp")
 
     @lookup_property
-    def trunc_day(self):
+    def trunc_day():
         return functions.TruncDay("timestamp")
 
     @lookup_property
-    def trunc_hour(self):
+    def trunc_hour():
         return functions.TruncHour("timestamp")
 
     @lookup_property
-    def trunc_minute(self):
+    def trunc_minute():
         return functions.TruncMinute("timestamp")
 
     @lookup_property
-    def trunc_second(self):
+    def trunc_second():
         return functions.TruncSecond("timestamp")
 
     @lookup_property
-    def trunc_week(self):
+    def trunc_week():
         return functions.TruncWeek("timestamp")
 
     @lookup_property
-    def trunc_quarter(self):
+    def trunc_quarter():
         return functions.TruncQuarter("timestamp")
 
     @lookup_property
-    def trunc_date(self):
+    def trunc_date():
         return functions.TruncDate("timestamp")
 
     @lookup_property
-    def trunc_time(self):
+    def trunc_time():
         return functions.TruncTime("timestamp")
 
     @lookup_property
-    def upper(self):
+    def upper():
         return functions.Upper("first_name")
 
     @lookup_property
-    def lower(self):
+    def lower():
         return functions.Lower("first_name")
 
     @lookup_property
-    def lpad(self):
+    def lpad():
         return functions.LPad("first_name", length=20, fill_text=models.Value("."))
 
     @lookup_property
-    def rpad(self):
+    def rpad():
         return functions.RPad("first_name", length=20, fill_text=models.Value("."))
 
     @lookup_property
-    def rtrim(self):
+    def rtrim():
         return functions.RTrim("first_name")
 
     @lookup_property
-    def ltrim(self):
+    def ltrim():
         return functions.LTrim("first_name")
 
     @lookup_property
-    def length(self):
+    def length():
         return functions.Length("first_name")
 
     @lookup_property
-    def concat(self):
+    def concat():
         return functions.Concat(
             models.F("first_name"),
             models.Value(" "),
@@ -203,79 +203,79 @@ class Example(models.Model):
         )
 
     @lookup_property
-    def left(self):
+    def left():
         return functions.Left("first_name", length=1)
 
     @lookup_property
-    def right(self):
+    def right():
         return functions.Right("first_name", length=1)
 
     @lookup_property
-    def repeat(self):
+    def repeat():
         return functions.Repeat("first_name", number=3)
 
     @lookup_property
-    def repeat(self):
+    def repeat():
         return functions.Repeat("first_name", number=3)
 
     @lookup_property
-    def replace(self):
+    def replace():
         return functions.Replace("first_name", text=models.Value("oo"), replacement=models.Value("uu"))
 
     @lookup_property
-    def reverse(self):
+    def reverse():
         return functions.Reverse("first_name")
 
     @lookup_property
-    def strindex(self):
+    def strindex():
         return functions.StrIndex("first_name", models.Value("o"))
 
     @lookup_property
-    def substr(self):
+    def substr():
         return functions.Substr("first_name", 2)
 
     @lookup_property
-    def substr_length(self):
+    def substr_length():
         return functions.Substr("first_name", 2, 1)
 
     @lookup_property
-    def trim(self):
+    def trim():
         return functions.Trim("first_name")
 
     @lookup_property
-    def chr_(self):
+    def chr_():
         return functions.Chr(65, output_field=models.CharField())
 
     @lookup_property
-    def ord_(self):
+    def ord_():
         return functions.Ord("first_name", output_field=models.IntegerField())
 
     @lookup_property
-    def md5(self):
+    def md5():
         return MD5("first_name")
 
     @lookup_property
-    def sha1(self):
+    def sha1():
         return functions.SHA1("first_name")
 
     @lookup_property
-    def sha224(self):
+    def sha224():
         return functions.SHA224("first_name")
 
     @lookup_property
-    def sha256(self):
+    def sha256():
         return functions.SHA256("first_name")
 
     @lookup_property
-    def sha384(self):
+    def sha384():
         return functions.SHA384("first_name")
 
     @lookup_property
-    def sha512(self):
+    def sha512():
         return functions.SHA512("first_name")
 
     @lookup_property
-    def case(self):
+    def case():
         return models.Case(
             models.When(
                 models.Q(first_name="foo"),
@@ -286,7 +286,7 @@ class Example(models.Model):
         )
 
     @lookup_property
-    def case_2(self):
+    def case_2():
         return models.Case(
             models.When(
                 condition=models.Q(first_name="fizz"),
@@ -301,7 +301,7 @@ class Example(models.Model):
         )
 
     @lookup_property
-    def case_3(self):
+    def case_3():
         return models.Case(
             models.When(
                 condition=models.Q(first_name="foo"),
@@ -326,7 +326,7 @@ class Example(models.Model):
         )
 
     @lookup_property
-    def case_4(self):
+    def case_4():
         return models.Case(
             models.When(
                 condition=models.Q(first_name="foo") & models.Q(last_name="bar"),
@@ -337,7 +337,7 @@ class Example(models.Model):
         )
 
     @lookup_property(skip_codegen=True)
-    def case_5(self):
+    def case_5():
         return models.Case(
             models.When(
                 condition=models.Q(totals__number=1),
@@ -352,7 +352,7 @@ class Example(models.Model):
         return "foo" if self.totals.filter(number=1).exists() else "bar"
 
     @lookup_property(joins=["parts"], skip_codegen=True)
-    def case_6(self):
+    def case_6():
         return models.Case(
             models.When(
                 models.Q(parts__far__number=1),
@@ -367,7 +367,7 @@ class Example(models.Model):
         return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 
     @lookup_property(joins=["parts"], skip_codegen=True)
-    def case_7(self):
+    def case_7():
         return models.Case(
             models.When(
                 condition=models.Q(parts__number=1) & models.Q(parts__far__number=1),
@@ -382,7 +382,7 @@ class Example(models.Model):
         return "foo" if self.parts.filter(number=1, far__number=1).exists() else "bar"
 
     @lookup_property(joins=["parts"], skip_codegen=True, concrete=True)
-    def case_8(self):
+    def case_8():
         return models.Case(
             models.When(
                 models.Q(parts__far__number=1),
@@ -396,8 +396,8 @@ class Example(models.Model):
     def _(self):
         return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 
-    @lookup_property(joins=["thing"], skip_codegen=True)
-    def reffed_by_another_lookup(self):
+    @lookup_property(skip_codegen=True)
+    def reffed_by_another_lookup():
         return models.F("parts__far__number")
 
     @reffed_by_another_lookup.override
@@ -405,7 +405,7 @@ class Example(models.Model):
         return self.parts.values_list("far__number", flat=True).first()
 
     @lookup_property
-    def refs_another_lookup(self):
+    def refs_another_lookup():
         return models.Case(
             models.When(
                 models.Q(L(reffed_by_another_lookup=1)),
@@ -416,56 +416,56 @@ class Example(models.Model):
         )
 
     @lookup_property
-    def cast_str(self):
+    def cast_str():
         return functions.Cast("age", output_field=models.CharField())
 
     @lookup_property
-    def cast_int(self):
+    def cast_int():
         return functions.Cast("age", output_field=models.IntegerField())
 
     @lookup_property
-    def cast_float(self):
+    def cast_float():
         return functions.Cast("age", output_field=models.FloatField())
 
     @lookup_property
-    def cast_decimal(self):
+    def cast_decimal():
         return functions.Cast("age", output_field=models.DecimalField())
 
     @lookup_property
-    def cast_bool(self):
+    def cast_bool():
         return functions.Cast("age", output_field=models.BooleanField())
 
     @lookup_property
-    def cast_uuid(self):
+    def cast_uuid():
         return functions.Cast(
             models.Value("a2cabdde-bc6b-4626-87fe-dea41458dd8f"),
             output_field=models.UUIDField(),
         )
 
     @lookup_property
-    def cast_json(self):
+    def cast_json():
         return functions.Cast(models.Value('{"foo": 1}'), output_field=models.JSONField())
 
     # TODO: Collate
 
     @lookup_property
-    def coalesce(self):
+    def coalesce():
         return functions.Coalesce("first_name", "last_name")
 
     @lookup_property
-    def coalesce_2(self):
+    def coalesce_2():
         return functions.Coalesce(functions.Concat("first_name", "last_name"), models.Value("."))
 
     @lookup_property
-    def greatest(self):
+    def greatest():
         return functions.Greatest("age", "number")
 
     @lookup_property
-    def least(self):
+    def least():
         return functions.Least("age", "number")
 
     @lookup_property
-    def json_object(self):
+    def json_object():
         return functions.JSONObject(
             name=functions.Upper("name"),
             alias=models.Value("alias"),
@@ -473,239 +473,239 @@ class Example(models.Model):
         )
 
     @lookup_property
-    def nullif(self):
+    def nullif():
         return functions.NullIf("first_name", "last_name")
 
     @lookup_property
-    def extract(self):
+    def extract():
         return functions.Extract("timestamp", "year")
 
     @lookup_property
-    def extract_year(self):
+    def extract_year():
         return functions.ExtractYear("timestamp")
 
     @lookup_property
-    def extract_iso_year(self):
+    def extract_iso_year():
         return functions.ExtractIsoYear("timestamp")
 
     @lookup_property
-    def extract_month(self):
+    def extract_month():
         return functions.ExtractMonth("timestamp")
 
     @lookup_property
-    def extract_day(self):
+    def extract_day():
         return functions.ExtractDay("timestamp")
 
     @lookup_property
-    def extract_week(self):
+    def extract_week():
         return functions.ExtractWeek("timestamp")
 
     @lookup_property
-    def extract_weekday(self):
+    def extract_weekday():
         return functions.ExtractWeekDay("timestamp")
 
     @lookup_property
-    def extract_iso_weekday(self):
+    def extract_iso_weekday():
         return functions.ExtractIsoWeekDay("timestamp")
 
     @lookup_property
-    def extract_quarter(self):
+    def extract_quarter():
         return functions.ExtractQuarter("timestamp")
 
     @lookup_property
-    def extract_hour(self):
+    def extract_hour():
         return functions.ExtractHour("timestamp")
 
     @lookup_property
-    def extract_minute(self):
+    def extract_minute():
         return functions.ExtractMinute("timestamp")
 
     @lookup_property
-    def extract_second(self):
+    def extract_second():
         return functions.ExtractSecond("timestamp")
 
     @lookup_property
-    def abs_(self):
+    def abs_():
         return functions.Abs("number")
 
     @lookup_property
-    def acos(self):
+    def acos():
         return functions.ACos("number")
 
     @lookup_property
-    def asin(self):
+    def asin():
         return functions.ASin("number")
 
     @lookup_property
-    def atan(self):
+    def atan():
         return functions.ATan("number")
 
     @lookup_property
-    def atan2(self):
+    def atan2():
         return functions.ATan2("number", 2)
 
     @lookup_property
-    def ceil(self):
+    def ceil():
         return functions.Ceil("number")
 
     @lookup_property
-    def cos(self):
+    def cos():
         return functions.Cos("number")
 
     @lookup_property
-    def cot(self):
+    def cot():
         return functions.Cot("number")
 
     @lookup_property
-    def degrees(self):
+    def degrees():
         return functions.Degrees("number")
 
     @lookup_property
-    def exp(self):
+    def exp():
         return functions.Exp("number")
 
     @lookup_property
-    def floor(self):
+    def floor():
         return functions.Floor("number")
 
     @lookup_property
-    def ln(self):
+    def ln():
         return functions.Ln("number")
 
     @lookup_property
-    def log(self):
+    def log():
         return functions.Log("number", 10)
 
     @lookup_property
-    def mod(self):
+    def mod():
         return functions.Mod("number", 4)
 
     @lookup_property
-    def pi(self):
+    def pi():
         return functions.Pi()
 
     @lookup_property
-    def power(self):
+    def power():
         return functions.Power("number", 3)
 
     @lookup_property
-    def radians(self):
+    def radians():
         return functions.Radians("number")
 
     @lookup_property
-    def random(self):
+    def random():
         return Random()
 
     @lookup_property
-    def round_(self):
+    def round_():
         return functions.Round("number")
 
     @lookup_property
-    def round_2(self):
+    def round_2():
         return functions.Round("number", precision=2)
 
     @lookup_property
-    def sign(self):
+    def sign():
         return functions.Sign("number")
 
     @lookup_property
-    def sin(self):
+    def sin():
         return functions.Sin("number")
 
     @lookup_property
-    def sqrt(self):
+    def sqrt():
         return functions.Sqrt("number")
 
     @lookup_property
-    def tan(self):
+    def tan():
         return functions.Tan("number")
 
     @lookup_property
-    def q(self):
+    def q():
         return models.Q(first_name="foo")
 
     @lookup_property
-    def q_rel(self):
+    def q_rel():
         return models.Q(thing__name="foo")
 
     @lookup_property
-    def q_neg(self):
+    def q_neg():
         return ~models.Q(first_name="foo")
 
     @lookup_property
-    def q_empty(self):
+    def q_empty():
         return models.Q()
 
     @lookup_property
-    def q_exact(self):
+    def q_exact():
         return models.Q(first_name__exact="foo")
 
     @lookup_property
-    def q_iexact(self):
+    def q_iexact():
         return models.Q(first_name__iexact="FOO")
 
     @lookup_property
-    def q_iexact_null(self):
+    def q_iexact_null():
         return models.Q(first_name__iexact=None)
 
     @lookup_property
-    def q_gte(self):
+    def q_gte():
         return models.Q(timestamp__gte=functions.Now())
 
     @lookup_property
-    def q_gt(self):
+    def q_gt():
         return models.Q(timestamp__gt=datetime.datetime(2022, 1, 1, tzinfo=datetime.UTC))
 
     @lookup_property
-    def q_lte(self):
+    def q_lte():
         return models.Q(timestamp__lte=functions.Now())
 
     @lookup_property
-    def q_lt(self):
+    def q_lt():
         return models.Q(timestamp__lt=datetime.datetime(2022, 1, 1, tzinfo=datetime.UTC))
 
     @lookup_property
-    def q_in_list(self):
+    def q_in_list():
         return models.Q(first_name__in=["foo", "bar"])
 
     @lookup_property
-    def q_in_tuple(self):
+    def q_in_tuple():
         return models.Q(first_name__in=("foo", "bar"))
 
     @lookup_property
-    def q_in_set(self):
+    def q_in_set():
         return models.Q(first_name__in={"foo", "bar"})
 
     @lookup_property
-    def q_in_dict(self):
+    def q_in_dict():
         return models.Q(first_name__in={"foo": "bar"})
 
     @lookup_property
-    def q_contains(self):
+    def q_contains():
         return models.Q(first_name__contains="fo")
 
     @lookup_property
-    def q_icontains(self):
+    def q_icontains():
         return models.Q(first_name__icontains="FO")
 
     @lookup_property
-    def q_startswith(self):
+    def q_startswith():
         return models.Q(first_name__startswith="fo")
 
     @lookup_property
-    def q_istartswith(self):
+    def q_istartswith():
         return models.Q(first_name__istartswith="FO")
 
     @lookup_property
-    def q_endswith(self):
+    def q_endswith():
         return models.Q(first_name__endswith="fo")
 
     @lookup_property
-    def q_iendswith(self):
+    def q_iendswith():
         return models.Q(first_name__iendswith="FO")
 
     @lookup_property
-    def q_range(self):
+    def q_range():
         return models.Q(
             timestamp__range=(
                 datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC),
@@ -714,91 +714,91 @@ class Example(models.Model):
         )
 
     @lookup_property
-    def q_isnull(self):
+    def q_isnull():
         return models.Q(first_name__isnull=True)
 
     @lookup_property
-    def q_regex(self):
+    def q_regex():
         return models.Q(first_name__regex=r"[a-z]*")
 
     @lookup_property
-    def q_iregex(self):
+    def q_iregex():
         return models.Q(first_name__iregex=r"[A-Z]*")
 
     @lookup_property
-    def q_or(self):
+    def q_or():
         return models.Q(first_name="foo") | models.Q(last_name="bar")
 
     @lookup_property
-    def q_and(self):
+    def q_and():
         return models.Q(first_name="foo") & models.Q(last_name="bar")
 
     @lookup_property
-    def q_xor(self):
+    def q_xor():
         return models.Q(first_name="foo") ^ models.Q(last_name="bar")
 
     @lookup_property
-    def count_field(self):
+    def count_field():
         return aggregates.Count("*")
 
     @lookup_property
-    def count_field_filter(self):
+    def count_field_filter():
         return aggregates.Count("pk", filter=models.Q(number__lte=10))
 
     @lookup_property
-    def count_rel(self):
+    def count_rel():
         return aggregates.Count("totals__pk")
 
-    @lookup_property(joins=True)
-    def count_rel_deep(self):
+    @lookup_property(joins=["parts"])
+    def count_rel_deep():
         return aggregates.Count("parts__aliens")
 
     @lookup_property
-    def count_rel_filter(self):
+    def count_rel_filter():
         return aggregates.Count("totals", filter=models.Q(totals__name__contains="bar"))
 
     @lookup_property
-    def max_(self):
+    def max_():
         return aggregates.Max("number")
 
     @lookup_property
-    def max_rel(self):
+    def max_rel():
         return aggregates.Max("totals__number")
 
     @lookup_property
-    def min_(self):
+    def min_():
         return aggregates.Min("number")
 
     @lookup_property
-    def min_rel(self):
+    def min_rel():
         return aggregates.Min("totals__number")
 
     @lookup_property
-    def sum_(self):
+    def sum_():
         return aggregates.Sum("number")
 
     @lookup_property
-    def sum_rel(self):
+    def sum_rel():
         return aggregates.Sum("totals__number")
 
     @lookup_property
-    def sum_filter(self):
+    def sum_filter():
         return aggregates.Sum("number", filter=models.Q(number__lte=3))
 
     @lookup_property
-    def avg(self):
+    def avg():
         return aggregates.Avg("number")
 
     @lookup_property
-    def std_dev(self):
+    def std_dev():
         return aggregates.StdDev("number")
 
     @lookup_property
-    def variance(self):
+    def variance():
         return aggregates.Variance("number")
 
     @lookup_property(skip_codegen=True)
-    def subquery(self):
+    def subquery():
         return models.Subquery(Thing.objects.filter(example=models.OuterRef("pk")).values("number")[:1])
 
     @subquery.override
@@ -806,7 +806,7 @@ class Example(models.Model):
         return self.thing.number
 
     @lookup_property(skip_codegen=True)
-    def exists(self):
+    def exists():
         return models.Exists(Total.objects.filter(example=models.OuterRef("pk"), number=1))
 
     @exists.override
@@ -852,7 +852,7 @@ class Abstract(models.Model):
     abstract_field = models.CharField(max_length=256)
 
     @lookup_property
-    def abstract_property(self):
+    def abstract_property():
         return models.F("abstract_field")
 
     class Meta:
@@ -863,7 +863,7 @@ class AnotherAbstract(Abstract):
     another_abstract_field = models.CharField(max_length=256)
 
     @lookup_property
-    def another_abstract_property(self):
+    def another_abstract_property():
         return models.F("another_abstract_field")
 
     class Meta:

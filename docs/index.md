@@ -31,19 +31,22 @@ from django.db import models
 from django.db.models import Value
 from django.db.models.functions import Concat
 
-class Person(models.Model):
+class Student(models.Model):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
 
     @lookup_property
-    def full_name(self):
+    def full_name():
         return Concat("first_name", Value(" "), "last_name")
-
-# -------------------------------------------------------------
-
->>> Person.objects.create(first_name="John", last_name="Doe")
->>> person = Person.objects.filter(full_name="John Doe").first()
->>> person.full_name
+```
+```pycon
+>>> from myapp.models import Student
+>>> from lookup_property import L
+>>>
+>>> Student.objects.create(first_name="John", last_name="Doe")
+>>> student = Student.objects.filter(L(full_name="John Doe")).first()
+>>>
+>>> student.full_name
 'John Doe'
 ```
 

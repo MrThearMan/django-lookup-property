@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any, Iterator
 
 from django.db import models
 from django.db.models import ForeignObjectRel
-from django.db.models.constants import LOOKUP_SEP
 
 from lookup_property.expressions import LookupPropertyCol
 from lookup_property.typing import Sentinel
@@ -75,9 +74,9 @@ class LazyPathInfo:
     sql joins to the query, e.g., for `queryset.count()`.
     """
 
-    def __init__(self, field: LookupPropertyField, *, joins: list[str] | bool = True) -> None:
+    def __init__(self, field: LookupPropertyField, *, joins: list[str]) -> None:
         self.field = field
-        self.joins: list[str] = joins if isinstance(joins, list) else []
+        self.joins = joins
 
     def __iter__(self) -> Iterator[PathInfo]:
         return iter([self[0]])
@@ -87,16 +86,8 @@ class LazyPathInfo:
 
     @cached_property
     def get_path_info(self) -> list[PathInfo]:
-        joins = self.joins
-        if not joins:
-            expression = self.field.expression
-            while hasattr(expression, "source_expressions"):
-                expression = expression.source_expressions[0]
-
-            joins = expression.name.split(LOOKUP_SEP)[:1]
-
         path_info: list[PathInfo] = []
-        for join in joins:
+        for join in self.joins:
             rel_or_field: ForeignObjectRel | ForeignObject | ManyToManyField
             rel_or_field = self.field.model._meta.get_field(join)  # type: ignore[assignment]
 

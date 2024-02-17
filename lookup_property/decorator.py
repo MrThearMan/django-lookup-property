@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, overload
 
 from .converters.main import ast_module_to_function, query_expression_ast_module
 from .field import LookupPropertyField
-from .typing import FunctionType, SelfNotUsable, Sentinel, State
+from .typing import FunctionType, Sentinel, State
 
 if TYPE_CHECKING:
     from django.db import models
@@ -27,7 +27,14 @@ class lookup_property:  # noqa: N801
         """When using '@lookup_property'."""
 
     @overload
-    def __init__(self, *, joins: bool | list[str], use_tz: bool, skip_codegen: bool, concrete: bool) -> None:
+    def __init__(
+        self,
+        *,
+        joins: list[str] = ...,
+        skip_codegen: bool = ...,
+        concrete: bool = ...,
+        use_tz: bool = ...,
+    ) -> None:
         """When using '@lookup_property(...)' to set initial state."""
 
     def __init__(self, func: FunctionType | None = None, /, **kwargs: Any) -> None:
@@ -38,7 +45,7 @@ class lookup_property:  # noqa: N801
             self.state = State(**kwargs)
 
         if isinstance(func, FunctionType):
-            self._expression: Callable[[], Expr] = lambda: func(SelfNotUsable)
+            self._expression: Callable[[], Expr] = lambda: func()
             if self.state.skip_codegen:
                 return
 

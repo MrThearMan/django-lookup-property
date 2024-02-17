@@ -10,7 +10,7 @@ The `@lookup_property` decorator uses a [single-dispatch] function
 a number of converters for transforming Django ORM expressions to
 equivalent python statement [AST].
 
-Here's an example lookup-property:
+Let's take a look at our example from before:
 
 ```python
 from lookup_property import lookup_property
@@ -18,7 +18,7 @@ from django.db import models
 from django.db.models import Value
 from django.db.models.functions import Concat
 
-class Person(models.Model):
+class Student(models.Model):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
 
@@ -75,7 +75,7 @@ def _(expression: functions.ConcatPair, state: State) -> ast.BinOp:
 
 ## Lookups
 
-To convert [lookups] inside Q-expressions, there is another single-dispatch
+To convert [lookups] inside `L` and `Q` expressions, there is another single-dispatch
 function `lookup_property.converters.lookups.lookup_to_ast`.
 
 For example, to convert the following lookup-property:
@@ -84,7 +84,7 @@ For example, to convert the following lookup-property:
 from lookup_property import lookup_property
 from django.db import models
 
-class Person(models.Model):
+class Student(models.Model):
     name = models.CharField(max_length=256)
 
     @lookup_property

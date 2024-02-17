@@ -109,6 +109,14 @@ def test_filter_by_lookup_property__count():
     assert Example.objects.filter(L(count_rel_deep=1)).count() == 1
 
 
+def test_filter_by_lookup_property__count__as_value():
+    example = ExampleFactory.create(number=1, parts__aliens__number=1)
+    assert Example.objects.filter(number=L("count_rel_deep")).count() == 1
+    example.number = 2
+    example.save()
+    assert Example.objects.filter(number=L("count_rel_deep")).count() == 0
+
+
 def test_filter_by_lookup_property__case_6():
     example = ExampleFactory.create(parts__far__number=1)
 

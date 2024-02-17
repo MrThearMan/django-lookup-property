@@ -10,7 +10,6 @@ from typing import (
     Generator,
     Iterable,
     Literal,
-    NoReturn,
     ParamSpec,
     Protocol,
     Self,
@@ -46,7 +45,7 @@ __all__ = [
 
 TModel = TypeVar("TModel", bound=models.Model)
 Expr = BaseExpression | models.F | models.Q
-ModelMethod = Callable[[TModel], Expr]
+ModelMethod = Callable[[TModel], Expr] | Callable[[], Expr]
 ConvertFunc = Callable[[Any, BaseExpression, BaseDatabaseWrapper], Any]
 
 Sentinel = object()
@@ -71,15 +70,6 @@ class State:
     imports: set[str] = field(default_factory=set)
     use_tz: bool = field(default_factory=lambda: settings.USE_TZ)
     extra_kwargs: RandomKeyDict = field(default_factory=RandomKeyDict)
-    joins: bool | list[str] = False
+    joins: list[str] = field(default_factory=list)
     skip_codegen: bool = False
     concrete: bool = False
-
-
-class SelfNotUsable:  # pragma: no cover
-    def __getattr__(self, item: Any) -> NoReturn:
-        msg = "Lookup properties cannot use instance attributes. Refer to instance attributes with F() expressions."
-        raise ValueError(msg)
-
-
-SelfNotUsable = SelfNotUsable()
