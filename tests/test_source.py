@@ -604,10 +604,7 @@ def test_lookup_property__strindex__source():
     assert Example.strindex.func_source == cleandoc(
         """
         def strindex(self):
-            if 'o' in self.first_name:
-                return self.first_name.index('o') + 1
-            else:
-                return 0
+            return self.first_name.index('o') + 1 if 'o' in self.first_name else 0
         """,
     )
 
@@ -865,7 +862,7 @@ def test_lookup_property__coalesce_2__source():
     assert Example.coalesce_2.func_source == cleandoc(
         f"""
         def coalesce_2(self):
-            return {full_name} if {full_name} is not None else '.' if '.' is not None else None
+            return {full_name} if {full_name} is not None else '.' if '.' != None else None
         """,
     )
 

@@ -207,44 +207,32 @@ def _(expression: functions.Reverse, state: State) -> ast.Subscript:
 
 
 @expression_to_ast.register
-def _(expression: functions.StrIndex, state: State) -> ast.If:
+def _(expression: functions.StrIndex, state: State) -> ast.IfExp:
     """
     StrIndex("foo", Value("o"))
-
-    ->
-
-    if 'o' in self.foo:
-        return self.foo.index('o') + 1
-    else:
-        return 0
+    -> self.foo.index('o') + 1 if 'o' in self.foo else 0
     """
     arguments: list[Expr] = expression.get_source_expressions()
-    return ast.If(
+    return ast.IfExp(
         test=ast.Compare(
             left=expression_to_ast(arguments[1], state=state),
             ops=[ast.In()],
             comparators=[expression_to_ast(arguments[0], state=state)],
         ),
-        body=[
-            ast.Return(
-                value=ast.BinOp(
-                    left=ast.Call(
-                        func=ast.Attribute(
-                            value=expression_to_ast(arguments[0], state=state),
-                            attr="index",
-                            ctx=ast.Load(),
-                        ),
-                        args=[expression_to_ast(arguments[1], state=state)],
-                        keywords=[],
-                    ),
-                    op=ast.Add(),
-                    right=ast.Constant(value=1),
+        body=ast.BinOp(
+            left=ast.Call(
+                func=ast.Attribute(
+                    value=expression_to_ast(arguments[0], state=state),
+                    attr="index",
+                    ctx=ast.Load(),
                 ),
+                args=[expression_to_ast(arguments[1], state=state)],
+                keywords=[],
             ),
-        ],
-        orelse=[
-            ast.Return(value=ast.Constant(value=0)),
-        ],
+            op=ast.Add(),
+            right=ast.Constant(value=1),
+        ),
+        orelse=ast.Constant(value=0),
     )
 
 

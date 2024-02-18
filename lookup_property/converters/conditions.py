@@ -46,7 +46,7 @@ def args_to_if_expression(args: list[Expr], state: State) -> ast.IfExp:
     return ast.IfExp(
         test=ast.Compare(
             left=value,
-            ops=[ast.IsNot()],
+            ops=[ast.NotEq() if isinstance(value, ast.Constant) else ast.IsNot()],
             comparators=[ast.Constant(value=None)],
         ),
         body=value,

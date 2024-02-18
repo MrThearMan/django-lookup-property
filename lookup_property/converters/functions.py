@@ -49,7 +49,7 @@ def _(expression: MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512, state: State) 
 
 @expression_to_ast.register
 def _(expression: functions.Greatest, state: State) -> ast.Call:
-    """Coalesce("foo", "bar") -> max({self.foo, self.bar}.difference({None}), default=None)"""
+    """Greatest("foo", "bar") -> max({self.foo, self.bar}.difference({None}), default=None)"""
     arguments: list[Expr] = expression.get_source_expressions()
     return ast.Call(
         func=ast.Name(id="max", ctx=ast.Load()),
@@ -75,7 +75,7 @@ def _(expression: functions.Greatest, state: State) -> ast.Call:
 
 @expression_to_ast.register
 def _(expression: functions.Least, state: State) -> ast.Call:
-    """Coalesce("foo", "bar") -> min({self.foo, self.bar}.difference({None}), default=None)"""
+    """Least("foo", "bar") -> min({self.foo, self.bar}.difference({None}), default=None)"""
     arguments: list[Expr] = expression.get_source_expressions()
     return ast.Call(
         func=ast.Name(id="min", ctx=ast.Load()),
