@@ -2,7 +2,7 @@
 
 ## Filtering
 
-You can use the lookup-property in queries by referring to it inside a special `L` expression:
+You can use the lookup property in queries by referring to it inside a special `L` expression:
 
 ```pycon
 >>> from myapp.models import Student
@@ -12,11 +12,11 @@ You can use the lookup-property in queries by referring to it inside a special `
 >>> Student = Student.objects.filter(L(full_name="John Doe")).first()
 ```
 
-The L expression will find the lookup-property on the model, replace it with the
-ORM expression defined by it. This allows you to use the property in queries as
+The `L` expression will find the lookup property on the model, and replace it with the
+expression defined by it. This allows you to use the property in queries as
 if it was a normal field.
 
-You can also use the lookup-property as the filter value:
+You can also use the lookup property as the filter value:
 
 ```pycon
 >>> Person.objects.filter(first_name=L("full_name"))
@@ -42,22 +42,22 @@ You can also annotate the lookup property to pre-calculate it in the QuerySet.
 This bypasses the python code/override, which can be more efficient when fetching
 multiple rows at once (especially if the property contains complex expressions or joins).
 
-> See the `concrete` argument on lookup-property if you always want this behavior.
+> See the `concrete` argument on `lookup_property` decorator if you always want this behavior.
 
 ## Related lookups
 
-The `L` expression also allows you to use the lookup-property in related lookups:
+The `L` expression also allows you to use the lookup property in related lookups:
 
 ```pycon
 >>> Class.objects.filter(L(students__full_name="John Doe"))
 ```
 
-This will find the appropriate model where the lookup-property is defined and
+This will find the appropriate model where the lookup property is defined and
 add the necessary joins to the query automatically.
 
 ## Subqueries
 
-If the lookup-property is used in a subquery in an OuterRef, note that the
+If the lookup property is used in a subquery in an OuterRef, note that the
 `L` expression should wrap the whole subquery, and not just the OuterRef, since the
 lookup property is located in the outer query model and not the subquery model.
 
