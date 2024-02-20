@@ -28,14 +28,14 @@ def test_lookup_property__count_rel():
     assert example.count_rel == 1
 
 
-def test_lookup_property__count_rel_deep():
+def test_lookup_property__count_rel_many_to_many():
     example = ExampleFactory.create()
-    assert example.count_rel_deep == 0
+    assert example.count_rel_many_to_many == 0
     alien = AlienFactory.create()
     part = PartFactory.create()
     part.examples.add(example)
     alien.parts.add(part)
-    assert example.count_rel_deep == 1
+    assert example.count_rel_many_to_many == 1
 
 
 def test_lookup_property__count_rel_filter():

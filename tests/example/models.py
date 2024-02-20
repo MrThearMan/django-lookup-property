@@ -5,6 +5,7 @@ from django.db.models import aggregates, functions
 from django.db.models.functions import MD5, Random
 
 from lookup_property import L, lookup_property
+from tests.example.utils import SubqueryCount
 
 
 class Other(models.Model):
@@ -749,13 +750,29 @@ class Example(models.Model):
     def count_rel():
         return aggregates.Count("totals__pk")
 
-    @lookup_property(joins=["parts"])
-    def count_rel_deep():
-        return aggregates.Count("parts__aliens")
-
     @lookup_property
     def count_rel_filter():
         return aggregates.Count("totals", filter=models.Q(totals__name__contains="bar"))
+
+    @lookup_property(skip_codegen=True)
+    def count_rel_many_to_one():
+        # `aggregates.Count("totals__aliens")` does not work correctly together with filtering.
+        # See: `tests.test_filtering.test_filter_by_lookup_property__count_rel_many_to_one`
+        return SubqueryCount(Alien.objects.filter(total__example=models.OuterRef("pk")).values("id"))
+
+    @count_rel_many_to_one.override
+    def _(self):
+        return self.totals.aggregate(_count=models.Count("aliens"))["_count"]
+
+    @lookup_property(skip_codegen=True)
+    def count_rel_many_to_many():
+        # `aggregates.Count("parts__aliens")` does not work correctly together with filtering
+        # See: `tests.test_filtering.test_filter_by_lookup_property__count_rel_many_to_many`
+        return SubqueryCount(Alien.objects.filter(parts__examples=models.OuterRef("pk")).values("id"))
+
+    @count_rel_many_to_many.override
+    def _(self):
+        return self.parts.aggregate(_count=models.Count("aliens"))["_count"]
 
     @lookup_property
     def max_():

@@ -4,7 +4,15 @@ from django.db.models.functions import Lower, Upper
 
 from lookup_property import L
 from tests.example.models import Example, Far, Other, Part, Thing, Total
-from tests.factories import ExampleFactory, OtherFactory, PartFactory, ThingFactory, TotalFactory
+from tests.factories import (
+    AlienFactory,
+    ExampleFactory,
+    FarFactory,
+    OtherFactory,
+    PartFactory,
+    ThingFactory,
+    TotalFactory,
+)
 
 pytestmark = [
     pytest.mark.django_db,
@@ -102,19 +110,12 @@ def test_filter_by_lookup_property__subquery__exists():
     assert other.has_c is False
 
 
-def test_filter_by_lookup_property__count():
-    ExampleFactory.create(parts__aliens__number=1)
-    assert Example.objects.filter(_count_rel_deep=1).count() == 1
-    assert Example.objects.filter(_count_rel_deep=0).count() == 0
-    assert Example.objects.filter(L(count_rel_deep=1)).count() == 1
-
-
 def test_filter_by_lookup_property__count__as_value():
     example = ExampleFactory.create(number=1, parts__aliens__number=1)
-    assert Example.objects.filter(number=L("count_rel_deep")).count() == 1
+    assert Example.objects.filter(number=L("count_rel_many_to_many")).count() == 1
     example.number = 2
     example.save()
-    assert Example.objects.filter(number=L("count_rel_deep")).count() == 0
+    assert Example.objects.filter(number=L("count_rel_many_to_many")).count() == 0
 
 
 def test_filter_by_lookup_property__case_6():
@@ -286,3 +287,44 @@ def test_filter_by_lookup_property__count__aggregate_needs_group_by():
 
     assert Example.objects.filter(L(count_field=1)).first() == example
     assert Example.objects.filter(L(count_field=0)).first() is None
+
+
+def test_filter_by_lookup_property__count_rel_many_to_one():
+    example = ExampleFactory.create()
+
+    total_1 = TotalFactory.create(example=example, number=2)
+    total_2 = TotalFactory.create(example=example, number=2)
+
+    FarFactory.create(total=total_1, number=2)
+    FarFactory.create(total=total_2, number=2)
+
+    AlienFactory.create(total=total_1, number=1)
+    AlienFactory.create(total=total_1, number=1)
+    AlienFactory.create(total=total_2, number=1)
+
+    assert example.count_rel_many_to_one == 3  # python code
+    example = (
+        Example.objects.annotate(count_rel_many_to_one=L("count_rel_many_to_one"))  #
+        .filter(totals__far__number=2)
+        .first()
+    )
+    assert example.count_rel_many_to_one == 3  # annotated value
+
+
+def test_filter_by_lookup_property__count_rel_many_to_man():
+    example = ExampleFactory.create()
+
+    part_1 = PartFactory.create(examples=[example], far__number=2)
+    part_2 = PartFactory.create(examples=[example], far__number=2)
+
+    AlienFactory.create(total__example=example, parts=[part_1], number=1)
+    AlienFactory.create(total__example=example, parts=[part_1], number=1)
+    AlienFactory.create(total__example=example, parts=[part_2], number=1)
+
+    assert example.count_rel_many_to_one == 3  # python code
+    example = (
+        Example.objects.annotate(count_rel_many_to_many=L("count_rel_many_to_many"))  #
+        .filter(parts__far__number=2)
+        .first()
+    )
+    assert example.count_rel_many_to_many == 3  # annotated value
