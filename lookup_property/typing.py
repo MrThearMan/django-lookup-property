@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import random
 import string
 from dataclasses import dataclass, field
 from types import FunctionType
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Collection,
@@ -20,7 +23,10 @@ from typing import (
 from django.conf import settings
 from django.db import models
 from django.db.backends.base.base import BaseDatabaseWrapper
-from django.db.models.expressions import BaseExpression
+from django.db.models.expressions import BaseExpression, Combinable
+
+if TYPE_CHECKING:
+    from django.db.models.sql import Query
 
 __all__ = [
     "Any",
@@ -43,8 +49,22 @@ __all__ = [
     "TypeVar",
 ]
 
+
 TModel = TypeVar("TModel", bound=models.Model)
-Expr = BaseExpression | models.F | models.Q
+Expr = BaseExpression | Combinable | models.Q
+
+
+class ExpressionKind(Protocol):
+    def resolve_expression(  # noqa: PLR0913
+        self,
+        query: Query,
+        allow_joins: bool,  # noqa: FBT001
+        reuse: set[str] | None,
+        summarize: bool,  # noqa: FBT001
+        for_save: bool,  # noqa: FBT001
+    ) -> ExpressionKind: ...
+
+
 ModelMethod = Callable[[TModel], Expr] | Callable[[], Expr]
 ConvertFunc = Callable[[Any, BaseExpression, BaseDatabaseWrapper], Any]
 

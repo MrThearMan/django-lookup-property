@@ -7,10 +7,12 @@ from typing import TYPE_CHECKING, Iterator
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.db.models import sql
+from django.db.models import Q, sql
 from django.db.models.constants import LOOKUP_SEP
-from django.db.models.expressions import BaseExpression, ResolvedOuterRef
+from django.db.models.expressions import BaseExpression, Combinable, NegatedExpression, ResolvedOuterRef
 from django.db.models.sql import Query
+
+from .typing import Sentinel
 
 if TYPE_CHECKING:
     from django.db.backends.base.base import BaseDatabaseWrapper
@@ -21,8 +23,7 @@ if TYPE_CHECKING:
     from django.db.models.sql.where import WhereNode
 
     from .field import LookupPropertyField
-    from .typing import Any, Callable, ConvertFunc, Expr
-
+    from .typing import Any, Callable, ConvertFunc, Expr, ExpressionKind
 
 __all__ = [
     "LookupPropertyCol",
@@ -47,7 +48,7 @@ class LookupPropertyCol(models.Expression):
         return self.target.model._meta.db_table
 
     @property
-    def expression(self) -> Expr:
+    def expression(self) -> ExpressionKind:
         return self.target.expression
 
     @cached_property
@@ -66,7 +67,7 @@ class LookupPropertyCol(models.Expression):
     def get_transform(self, name: str) -> type[Transform] | None:
         return self.target.get_transform(name)  # pragma: no cover
 
-    def _resolve_joined_lookup(self, query: sql.Query) -> Expr:
+    def _resolve_joined_lookup(self, query: sql.Query) -> ExpressionKind:
         try:
             join: Join = query.alias_map[self.model._meta.db_table]  # type: ignore[assignment]
         except KeyError:
@@ -77,7 +78,7 @@ class LookupPropertyCol(models.Expression):
         return extend_expression_to_joined_table(self.expression, table_name)
 
     def as_sql(self, compiler: SQLCompiler, connection: BaseDatabaseWrapper) -> tuple[str, list[Any]]:
-        expression: Expr = self.expression
+        expression = self.expression
         if self.model != compiler.query.model:
             expression = self._resolve_joined_lookup(compiler.query)
 
@@ -98,13 +99,13 @@ class LookupPropertyCol(models.Expression):
         return super().convert_value
 
 
-class L:
+class L(Combinable):
     """
     Designate a lookup property as a filter condition or values selection.
 
     Examples:
 
-    >>> qs.values(full_name_alias=L("full_name"))
+    >>> qs.values(full_name=L("full_name"))
 
     >>> qs.values_list(L("full_name"), flat=True)
 
@@ -115,6 +116,8 @@ class L:
     """
 
     def __init__(self, __ref: str | models.Subquery = "", /, **kwargs: Any) -> None:
+        self.conditional = bool(kwargs)  # See. `django.db.models.sql.query.Query.build_filter`
+
         if __ref:  # pragma: no cover
             if kwargs:
                 msg = "Either one positional or keyword argument can be given."
@@ -122,14 +125,16 @@ class L:
 
             self.lookup = __ref
 
-        elif len(kwargs) != 1:  # pragma: no cover
-            msg = "Exactly one keyword argument is required."
+        elif len(kwargs) > 1:  # pragma: no cover
+            msg = "Multiple keyword arguments are not supported."
+            raise ValueError(msg)
+
+        elif not kwargs:  # pragma: no cover
+            msg = "Either one positional or keyword argument must be given."
             raise ValueError(msg)
 
         else:
             self.lookup, self.value = kwargs.popitem()
-
-        self.conditional = True  # See. `django.db.models.sql.query.Query.build_filter`
 
     def __str__(self) -> str:
         if hasattr(self, "value"):
@@ -150,6 +155,31 @@ class L:
     def __getitem__(self, item: int) -> Any:
         return list(self)[item]
 
+    def __or__(self, other: L | Q) -> Q:
+        return Q(self) | Q(other)
+
+    def __and__(self, other: L | Q) -> Q:
+        return Q(self) & Q(other)
+
+    def __xor__(self, other: L | Q) -> Q:
+        return Q(self) ^ Q(other)
+
+    def __invert__(self) -> Q | NegatedExpression:
+        if self.conditional:
+            return ~Q(self)
+        return super().__invert__()
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, L):
+            return False
+        return self.lookup == other.lookup and getattr(self, "value", Sentinel) == getattr(other, "value", Sentinel)
+
+    def __hash__(self) -> int:
+        value = getattr(self, "value", Sentinel)
+        if value is not Sentinel:
+            return hash((self.lookup, value))
+        return hash(self.lookup)
+
     def resolve_expression(  # noqa: PLR0913
         self,
         query: Query,
@@ -157,7 +187,7 @@ class L:
         reuse: Any = None,
         summarize: bool = False,  # noqa: FBT001, FBT002
         for_save: bool = False,  # noqa: ARG002, FBT001, FBT002
-    ) -> Expr:
+    ) -> ExpressionKind:
         """Resolve lookup expression and either return it or build a lookup expression based on it."""
         field, lookup_parts, joined_tables = self.find_lookup_property_field(query)
         lookup_name = field.attname.removeprefix("_")
@@ -238,7 +268,7 @@ class L:
         return field, lookup_parts, joined_tables
 
 
-def expression_has_output_field(expression: Expr) -> bool:  # pragma: no cover
+def expression_has_output_field(expression: ExpressionKind) -> bool:  # pragma: no cover
     # Check whether the 'output_field' of the expression can be resolved.
     # This might fail, and does fail for expressions like Trunc if the 'output_field'
     # is not explicitly given (e.g. 'Trunc(F("foo"))' will end up using 'BaseExpression.output_field',
@@ -249,7 +279,7 @@ def expression_has_output_field(expression: Expr) -> bool:  # pragma: no cover
 
 
 def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr:
-    """Rewrite the expression so that any containing F and Q expressions are referenced from the given table."""
+    """Rewrite an expression so that any containing expressions are referenced from the given table."""
     if isinstance(expression, models.F):
         expression = deepcopy(expression)
         expression.name = f"{table_name}{LOOKUP_SEP}{expression.name}"
@@ -261,7 +291,7 @@ def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr
         if hasattr(expression, "value"):
             expression.value = (
                 extend_expression_to_joined_table(expression.value, table_name)
-                if isinstance(expression.value, (models.F, models.Q, BaseExpression))
+                if isinstance(expression.value, (models.F, models.Q, BaseExpression, L))
                 else expression.value
             )
         return expression
@@ -286,7 +316,7 @@ def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr
     # For sub-queries, only OuterRefs are rewritten.
     if isinstance(expression, models.Subquery):
         expression = deepcopy(expression)
-        sub_expressions: list[Expr] = expression.query.where.children
+        sub_expressions: list[ExpressionKind] = expression.query.where.children  # type: ignore[assignment]
         expression.query.where.children = []
         for child in sub_expressions:
             expression.query.where.children.append(extend_subquery_to_joined_table(child, table_name))

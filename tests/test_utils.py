@@ -1,4 +1,5 @@
 from django.db.models import F, Q
+from django.db.models.expressions import CombinedExpression, NegatedExpression
 from django.db.models.functions import Upper
 
 from lookup_property import L
@@ -84,6 +85,57 @@ def test_l__contains():
     assert ("bar" in l_ref) is True
 
 
+def test_l__or():
+    result = L(foo="bar") | L(fizz="buzz")
+    assert result == Q(L(foo="bar")) | Q(L(fizz="buzz"))
+
+
+def test_l__and():
+    result = L(foo="bar") & L(fizz="buzz")
+    assert result == Q(L(foo="bar")) & Q(L(fizz="buzz"))
+
+
+def test_l__xor():
+    result = L(foo="bar") ^ L(fizz="buzz")
+    assert result == Q(L(foo="bar")) ^ Q(L(fizz="buzz"))
+
+
+def test_l__or__with_q():
+    result = Q(foo="bar") | L(fizz="buzz")
+    assert result == Q(foo="bar") | Q(L(fizz="buzz"))
+
+
+def test_l__or__with_q__reverse():
+    result = L(foo="bar") | Q(fizz="buzz")
+    assert result == Q(L(foo="bar")) | Q(Q(fizz="buzz"))
+
+
+def test_l__invert__conditional():
+    result = ~L(foo="bar")
+    assert result == ~Q(L(foo="bar"))
+
+
+def test_l__invert__non_conditional():
+    result = ~L("bar")
+    assert result == NegatedExpression(L("bar"))
+
+
+def test_l__eq():
+    assert L("foo") == L("foo")
+    assert L("foo") != L("bar")
+    assert L("foo") != "foo"
+    assert L("foo") != "foo"
+
+
+def test_l__combinable():
+    assert L("foo") + L("foo") == CombinedExpression(L("foo"), "+", L("foo"))
+    assert L("foo") - L("foo") == CombinedExpression(L("foo"), "-", L("foo"))
+    assert L("foo") * L("foo") == CombinedExpression(L("foo"), "*", L("foo"))
+    assert L("foo") / L("foo") == CombinedExpression(L("foo"), "/", L("foo"))
+    assert L("foo") ** L("foo") == CombinedExpression(L("foo"), "^", L("foo"))
+    assert L("foo") % L("foo") == CombinedExpression(L("foo"), "%%", L("foo"))
+
+
 def test_extend_expression_to_joined_table():
     q1 = Q(foo="bar")
     q2 = extend_expression_to_joined_table(q1, "example")
@@ -123,14 +175,14 @@ def test_extend_expression_to_joined_table__contains_l_ref():
     q1 = Q(L(foo="bar"))
     q2 = extend_expression_to_joined_table(q1, "example")
 
-    assert str(q2.children) == "[L(example__foo='bar')]"
+    assert q2.children == [L(example__foo="bar")]
 
 
 def test_extend_expression_to_joined_table__value_is_f_ref():
     q1 = Q(L(foo=F("bar")))
     q2 = extend_expression_to_joined_table(q1, "example")
 
-    assert str(q2.children) == "[L(example__foo=F(example__bar))]"
+    assert q2.children == [L(example__foo=F("example__bar"))]
 
 
 def test_extend_expression_to_joined_table__value_is_func():
