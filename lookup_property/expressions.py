@@ -11,6 +11,7 @@ from django.db.models import Q, sql
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.expressions import BaseExpression, Combinable, NegatedExpression, ResolvedOuterRef
 from django.db.models.sql import Query
+from django.utils.hashable import make_hashable
 
 from .typing import Sentinel
 
@@ -177,7 +178,7 @@ class L(Combinable):
     def __hash__(self) -> int:
         value = getattr(self, "value", Sentinel)
         if value is not Sentinel:
-            return hash((self.lookup, value))
+            return hash((self.lookup, make_hashable(value)))
         return hash(self.lookup)
 
     def resolve_expression(  # noqa: PLR0913

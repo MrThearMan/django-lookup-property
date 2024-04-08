@@ -136,6 +136,13 @@ def test_l__combinable():
     assert L("foo") % L("foo") == CombinedExpression(L("foo"), "%%", L("foo"))
 
 
+def test_l__hashable():
+    assert hash(L("foo"))
+    assert hash(L(foo=1))
+    assert hash(L(foo=[1]))
+    assert hash(L(foo={"bar": 1}))
+
+
 def test_extend_expression_to_joined_table():
     q1 = Q(foo="bar")
     q2 = extend_expression_to_joined_table(q1, "example")
