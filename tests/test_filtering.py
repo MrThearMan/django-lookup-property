@@ -328,3 +328,23 @@ def test_filter_by_lookup_property__count_rel_many_to_man():
         .first()
     )
     assert example.count_rel_many_to_many == 3  # annotated value
+
+
+def test_order_by_lookup_property():
+    example_1 = ExampleFactory.create(first_name="1", last_name="foo")
+    example_2 = ExampleFactory.create(first_name="2", last_name="foo")
+    example_3 = ExampleFactory.create(first_name="3", last_name="foo")
+
+    examples = list(Example.objects.order_by(L("full_name")))
+    assert examples == [
+        example_1,
+        example_2,
+        example_3,
+    ]
+
+    examples = list(Example.objects.order_by(L("full_name").desc()))
+    assert examples == [
+        example_3,
+        example_2,
+        example_1,
+    ]

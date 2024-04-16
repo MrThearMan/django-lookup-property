@@ -181,6 +181,12 @@ class L(Combinable):
             return hash((self.lookup, make_hashable(value)))
         return hash(self.lookup)
 
+    def asc(self, **kwargs: Any) -> models.OrderBy:
+        return models.OrderBy(self, **kwargs)
+
+    def desc(self, **kwargs: Any) -> models.OrderBy:
+        return models.OrderBy(self, descending=True, **kwargs)
+
     def resolve_expression(  # noqa: PLR0913
         self,
         query: Query,
