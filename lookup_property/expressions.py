@@ -181,11 +181,21 @@ class L(Combinable):
             return hash((self.lookup, make_hashable(value)))
         return hash(self.lookup)
 
+    def order_by(
+        self,
+        *,
+        descending: bool = False,
+        nulls_first: bool | None = None,
+        nulls_last: bool | None = None,
+    ) -> models.OrderBy:
+        return models.OrderBy(self, descending, nulls_first, nulls_last)
+
     def asc(self, **kwargs: Any) -> models.OrderBy:
-        return models.OrderBy(self, **kwargs)
+        return self.order_by(**kwargs)
 
     def desc(self, **kwargs: Any) -> models.OrderBy:
-        return models.OrderBy(self, descending=True, **kwargs)
+        kwargs["descending"] = True
+        return self.order_by(**kwargs)
 
     def resolve_expression(  # noqa: PLR0913
         self,
