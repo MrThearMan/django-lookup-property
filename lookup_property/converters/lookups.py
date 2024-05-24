@@ -57,14 +57,19 @@ def _(expression: models.Q, state: State) -> ast.Name | ast.BoolOp | ast.UnaryOp
     return comparison
 
 
-def and_or_comparison(children: list[tuple[str, Any]], expression: models.Q, state: State) -> ast.BoolOp:
+def and_or_comparison(children: list[tuple[str, Any] | models.Q], expression: models.Q, state: State) -> ast.BoolOp:
     """
     Q(foo=1) | Q(bar=2) -> self.foo == 1 or self.bar == 2
     Q(foo=1) & Q(bar=2) -> self.foo == 1 and self.bar == 2
     """
     return ast.BoolOp(
         op=ast.Or() if expression.connector == models.Q.OR else ast.And(),
-        values=[to_lookup_comparison(attr=attr, value=value, state=state) for attr, value in children],
+        values=[
+            expression_to_ast(item, state)
+            if isinstance(item, models.Q)
+            else to_lookup_comparison(attr=item[0], value=item[1], state=state)
+            for item in children
+        ],
     )
 
 

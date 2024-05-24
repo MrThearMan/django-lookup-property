@@ -397,6 +397,28 @@ class Example(models.Model):
     def _(self):
         return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 
+    @lookup_property
+    def case_9():
+        return models.Case(
+            models.When(
+                condition=models.Q(first_name="foo") & models.Q(last_name="bar") | models.Q(age=1),
+                then=models.Value("foo"),
+            ),
+            default=models.Value("bar"),
+            output_field=models.CharField(),
+        )
+
+    @lookup_property
+    def case_10():
+        return models.Case(
+            models.When(
+                condition=models.Q(first_name="foo") & (models.Q(last_name="bar") | ~models.Q(age=1)),
+                then=models.Value("foo"),
+            ),
+            default=models.Value("bar"),
+            output_field=models.CharField(),
+        )
+
     @lookup_property(skip_codegen=True)
     def reffed_by_another_lookup():
         return models.F("parts__far__number")
