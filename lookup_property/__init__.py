@@ -4,10 +4,10 @@ from .expressions import L
 from .typing import State
 
 __all__ = [
+    "L",
+    "State",
     "convert_django_field",
     "expression_to_ast",
-    "L",
     "lookup_property",
     "lookup_to_ast",
-    "State",
 ]

@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import ast
 
-from ..typing import Iterable
+from lookup_property.typing import Iterable
 
 __all__ = [
     "ast_attribute",

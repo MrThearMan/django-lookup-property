@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import ast
 
 from django.db.models import aggregates
 
-from ..typing import State
+from lookup_property.typing import State
+
 from .expressions import expression_to_ast
 from .utils import ast_function, ast_method
 

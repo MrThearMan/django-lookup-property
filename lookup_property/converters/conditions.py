@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import ast
 
 from django.db import models
 from django.db.models import functions
 
-from ..typing import Expr, State
+from lookup_property.typing import Expr, State
+
 from .expressions import expression_to_ast
 
 

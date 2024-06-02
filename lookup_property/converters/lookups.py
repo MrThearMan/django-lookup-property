@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import ast
 from typing import Any
 
@@ -5,9 +7,10 @@ from django.db import models
 from django.db.models import lookups
 from django.db.models.constants import LOOKUP_SEP
 
-from ..dispatch import lookup_singledispatch
-from ..expressions import L
-from ..typing import State
+from lookup_property.dispatch import lookup_singledispatch
+from lookup_property.expressions import L
+from lookup_property.typing import State
+
 from .expressions import expression_to_ast
 from .utils import ast_method, ast_property
 

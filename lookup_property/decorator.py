@@ -93,7 +93,7 @@ class lookup_property:  # noqa: N801
         self,
         cls: type[models.Model],
         name: str,
-        private_only: bool = False,  # noqa: FBT001, FBT002, ARG002
+        private_only: bool = False,  # noqa: FBT001, FBT002
     ) -> None:
         # Called by `django.db.models.base.ModelBase.add_to_class`
         field = LookupPropertyField(cls, target_property=self)

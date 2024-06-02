@@ -2,7 +2,8 @@ import ast
 
 from django.db.models import functions
 
-from ..typing import State
+from lookup_property.typing import State
+
 from .expressions import expression_to_ast
 
 

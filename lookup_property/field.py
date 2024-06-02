@@ -40,8 +40,8 @@ class LookupPropertyField(models.Field):
 
     def get_col(  # type: ignore[override]
         self,
-        alias: str,  # noqa: ARG002
-        output_field: models.Field | None = None,  # noqa: ARG002
+        alias: str,
+        output_field: models.Field | None = None,
     ) -> LookupPropertyCol:
         return self.cached_col
 

@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import ast
 
 from django.db.models import functions
-from django.db.models.functions import MD5, SHA1, SHA224, SHA256, SHA384, SHA512  # type: ignore[attr-defined]
+from django.db.models.functions import MD5, SHA1, SHA224, SHA256, SHA384, SHA512
 
-from ..typing import Expr, State
+from lookup_property.typing import Expr, State
+
 from .expressions import expression_to_ast
 
 

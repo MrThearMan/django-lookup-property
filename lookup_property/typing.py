@@ -31,7 +31,6 @@ if TYPE_CHECKING:
 __all__ = [
     "Any",
     "Callable",
-    "cast",
     "Collection",
     "Concatenate",
     "ConvertFunc",
@@ -47,6 +46,7 @@ __all__ = [
     "State",
     "TModel",
     "TypeVar",
+    "cast",
 ]
 
 
@@ -55,7 +55,7 @@ Expr = BaseExpression | Combinable | models.Q
 
 
 class ExpressionKind(Protocol):
-    def resolve_expression(  # noqa: PLR0913
+    def resolve_expression(
         self,
         query: Query,
         allow_joins: bool,  # noqa: FBT001
@@ -72,7 +72,7 @@ Sentinel = object()
 
 
 def random_arg_name() -> str:
-    return "".join(random.choices(string.ascii_lowercase, k=20))
+    return "".join(random.choices(string.ascii_lowercase, k=20))  # noqa: S311
 
 
 class RandomKeyDict(dict[str, Any]):

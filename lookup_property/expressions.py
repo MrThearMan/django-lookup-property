@@ -27,8 +27,8 @@ if TYPE_CHECKING:
     from .typing import Any, Callable, ConvertFunc, Expr, ExpressionKind
 
 __all__ = [
-    "LookupPropertyCol",
     "L",
+    "LookupPropertyCol",
 ]
 
 
@@ -197,13 +197,13 @@ class L(Combinable):
         kwargs["descending"] = True
         return self.order_by(**kwargs)
 
-    def resolve_expression(  # noqa: PLR0913
+    def resolve_expression(
         self,
         query: Query,
         allow_joins: bool,  # noqa: FBT001
         reuse: Any = None,
         summarize: bool = False,  # noqa: FBT001, FBT002
-        for_save: bool = False,  # noqa: ARG002, FBT001, FBT002
+        for_save: bool = False,  # noqa: FBT001, FBT002
     ) -> ExpressionKind:
         """Resolve lookup expression and either return it or build a lookup expression based on it."""
         field, lookup_parts, joined_tables = self.find_lookup_property_field(query)

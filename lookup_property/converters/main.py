@@ -3,13 +3,9 @@ from __future__ import annotations
 import ast
 import itertools
 from functools import partial, wraps
-from typing import TYPE_CHECKING
 
 from lookup_property import expression_to_ast
-
-if TYPE_CHECKING:
-    from lookup_property.typing import Expr, ModelMethod, State
-
+from lookup_property.typing import Expr, ModelMethod, State
 
 __all__ = [
     "ast_module_to_function",

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import ast
 from functools import singledispatch
 
@@ -5,7 +7,8 @@ from django.db import models
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.expressions import Combinable, CombinedExpression
 
-from ..typing import State
+from lookup_property.typing import State
+
 from .utils import ast_function, ast_property
 
 __all__ = [
@@ -31,7 +34,7 @@ def expression_to_ast(expression: object, state: State) -> ast.AST:
 
 
 @expression_to_ast.register
-def _(expression: None | str | int | float | bool | bytes, state: State) -> ast.Constant:  # noqa: PYI041
+def _(expression: None | str | int | float | bool | bytes, state: State) -> ast.Constant:  # noqa: PYI041, FBT001
     """Convert builtin values to constants"""
     return ast.Constant(value=expression)
 
