@@ -348,3 +348,20 @@ def test_order_by_lookup_property():
         example_2,
         example_1,
     ]
+
+
+def test_filter_by_lookup_property__annotation_not_removed_by_filter():
+    example = ExampleFactory.create()
+    pk = example.question.pk
+
+    # Annotation adds `forward_one_to_one` to the queryset.
+    qs = Example.objects.annotate(forward_one_to_one=L("forward_one_to_one"))
+    assert '"example_example"."question_id" AS "forward_one_to_one"' in str(qs.query)
+
+    # Referring to the annotated value by string uses the annotation.
+    qs = qs.filter(forward_one_to_one=pk).all()
+    assert '"example_example"."question_id" AS "forward_one_to_one"' in str(qs.query)
+
+    # Using L() to refer to the annotated value does not make the annotation an alias!
+    qs = qs.filter(L(forward_one_to_one=pk)).all()
+    assert '"example_example"."question_id" AS "forward_one_to_one"' in str(qs.query)

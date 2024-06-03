@@ -212,7 +212,8 @@ class L(Combinable):
         for table_name in reversed(joined_tables):
             expression = extend_expression_to_joined_table(expression, table_name)
 
-        query.add_annotation(expression, lookup_name, select=False)
+        if query.annotations.get(lookup_name) is None:
+            query.add_annotation(expression, lookup_name, select=False)
         expression = query.annotations[lookup_name]
 
         # Check whether the query should be grouped by the lookup expression.
