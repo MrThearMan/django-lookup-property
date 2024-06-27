@@ -755,7 +755,7 @@ def test_lookup_property__case_5__source():
     assert Example.case_5.func_source == cleandoc(
         """
         @case_5.override
-        def _(self):
+        def _(self) -> str:
             return 'foo' if self.totals.filter(number=1).exists() else 'bar'
         """,
     )
@@ -765,7 +765,7 @@ def test_lookup_property__case_6__source():
     assert Example.case_6.func_source == cleandoc(
         """
         @case_6.override
-        def _(self):
+        def _(self) -> str:
             return 'foo' if self.parts.filter(far__number=1).exists() else 'bar'
         """,
     )
@@ -775,7 +775,7 @@ def test_lookup_property__case_7__source():
     assert Example.case_7.func_source == cleandoc(
         """
         @case_7.override
-        def _(self):
+        def _(self) -> str:
             return 'foo' if self.parts.filter(number=1, far__number=1).exists() else 'bar'
         """,
     )
@@ -785,7 +785,7 @@ def test_lookup_property__case_8__source():
     assert Example.case_8.func_source == cleandoc(
         """
         @case_8.override
-        def _(self):
+        def _(self) -> str:
             return 'foo' if self.parts.filter(far__number=1).exists() else 'bar'
         """,
     )

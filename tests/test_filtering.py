@@ -365,3 +365,19 @@ def test_filter_by_lookup_property__annotation_not_removed_by_filter():
     # Using L() to refer to the annotated value does not make the annotation an alias!
     qs = qs.filter(L(forward_one_to_one=pk)).all()
     assert '"example_example"."question_id" AS "forward_one_to_one"' in str(qs.query)
+
+
+def test_filter_by_lookup_property__annotations_with_same_name_from_other_models():
+    ExampleFactory.create(number=1, other__number=1)
+    ExampleFactory.create(number=11, other__number=1)
+    ExampleFactory.create(number=2, other__number=22)
+
+    # This annotates the `number_in_range` property from `Example` model.
+    qs = Example.objects.annotate(number_in_range=L("number_in_range"))
+
+    # Filtering with the same lookup property works.
+    assert qs.filter(L(number_in_range=True)).count() == 2
+
+    # Filtering with a different lookup property from a different model
+    # with the same name should also work, and should use the correct property.
+    assert qs.filter(L(other__number_in_range=True)).count() == 1

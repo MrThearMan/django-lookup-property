@@ -9,7 +9,11 @@ from tests.example.utils import SubqueryCount
 
 
 class Other(models.Model):
-    pass
+    number = models.IntegerField(null=False, default=0)
+
+    @lookup_property
+    def number_in_range():
+        return models.Q(number__gt=10)
 
 
 class Question(models.Model):
@@ -38,6 +42,10 @@ class Example(models.Model):
             models.F("last_name"),
             output_field=models.CharField(),
         )
+
+    @lookup_property
+    def number_in_range():
+        return models.Q(number__lt=10)
 
     @lookup_property
     def name():
@@ -349,7 +357,7 @@ class Example(models.Model):
         )
 
     @case_5.override
-    def _(self):
+    def _(self) -> str:
         return "foo" if self.totals.filter(number=1).exists() else "bar"
 
     @lookup_property(joins=["parts"], skip_codegen=True)
@@ -364,7 +372,7 @@ class Example(models.Model):
         )
 
     @case_6.override
-    def _(self):
+    def _(self) -> str:
         return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 
     @lookup_property(joins=["parts"], skip_codegen=True)
@@ -379,7 +387,7 @@ class Example(models.Model):
         )
 
     @case_7.override
-    def _(self):
+    def _(self) -> str:
         return "foo" if self.parts.filter(number=1, far__number=1).exists() else "bar"
 
     @lookup_property(joins=["parts"], skip_codegen=True, concrete=True)
@@ -394,7 +402,7 @@ class Example(models.Model):
         )
 
     @case_8.override
-    def _(self):
+    def _(self) -> str:
         return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 
     @lookup_property
@@ -872,6 +880,10 @@ class Thing(models.Model):
     example = models.OneToOneField(Example, on_delete=models.CASCADE, related_name="thing")
     far = models.OneToOneField(Far, on_delete=models.CASCADE, related_name="thing")
     aliens = models.ManyToManyField(Alien, related_name="things")
+
+    @lookup_property
+    def number_in_range():
+        return models.Q(number__gt=10)
 
 
 class Total(models.Model):

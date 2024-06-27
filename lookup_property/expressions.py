@@ -212,9 +212,7 @@ class L(Combinable):
         for table_name in reversed(joined_tables):
             expression = extend_expression_to_joined_table(expression, table_name)
 
-        if query.annotations.get(lookup_name) is None:
-            query.add_annotation(expression, lookup_name, select=False)
-        expression = query.annotations[lookup_name]
+        expression = expression.resolve_expression(query, allow_joins, reuse, summarize, for_save)
 
         # Check whether the query should be grouped by the lookup expression.
         if expression.contains_aggregate:
@@ -257,7 +255,7 @@ class L(Combinable):
             try:
                 field: LookupPropertyField = query.model._meta.get_field(field_name)
             except FieldDoesNotExist:
-                # Lookup fields are prefixed with "_" to enable aliasing with the same name.
+                # Lookup property fields are prefixed with "_" to enable aliasing with the same name.
                 field: LookupPropertyField = query.model._meta.get_field(f"_{field_name}")
 
             # If the field is not a lookup property, it should be a related field.
@@ -272,7 +270,7 @@ class L(Combinable):
 
             # If the field is a lookup property, and joins have been defined for it,
             # join those tables to the query object before returning the field,
-            # but only if the lookup was wound from a related model.
+            # but only if the lookup was found from a related model.
             if joined_tables and isinstance(field.target_property.state.joins, list):
                 tables: list[str] = [
                     query.model._meta.get_field(join).related_model._meta.db_table

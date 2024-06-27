@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 
 import factory
@@ -19,6 +21,7 @@ from tests.example.models import (
 )
 
 __all__ = [
+    "AlienFactory",
     "ChildFactory",
     "ConcreteFactory",
     "ExampleFactory",
@@ -27,7 +30,6 @@ __all__ = [
     "QuestionFactory",
     "ThingFactory",
     "TotalFactory",
-    "AlienFactory",
 ]
 
 
@@ -35,6 +37,8 @@ TIMESTAMP = datetime.datetime(2022, 2, 1, tzinfo=datetime.UTC)
 
 
 class OtherFactory(DjangoModelFactory):
+    number = 42
+
     class Meta:
         model = Other
 
