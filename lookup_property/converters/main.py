@@ -62,7 +62,7 @@ def ast_to_module(function_name: str, return_value: ast.AST, state: State) -> as
 def ast_module_to_function(module: ast.Module, function_name: str, filename: str, state: State) -> ModelMethod:
     compiled = compile(source=module, filename=filename, mode="exec")
     namespace: dict[str, ModelMethod] = {}
-    eval(compiled, namespace)  # noqa: S307, PGH001
+    eval(compiled, namespace)  # noqa: S307
     func = namespace[function_name]
     if state.extra_kwargs:
         func = wraps(func)(partial(func, **state.extra_kwargs))
