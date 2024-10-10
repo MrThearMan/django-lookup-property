@@ -31,8 +31,10 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Framework :: Django :: 4.2",
     "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
 ]
 include = [
     "README.md",
@@ -51,10 +53,9 @@ Django = ">=4.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = "8.3.3"
-coverage = "7.6.1"
+coverage = "7.6.2"
 pytest-django = "4.9.0"
 freezegun = "1.5.1"
-pre-commit = "4.0.0"
 tox = "4.21.2"
 tox-gh-actions = "3.2.0"
 factory-boy = "3.3.1"
@@ -66,6 +67,7 @@ mkdocs-mermaid2-plugin = "1.1.1"
 
 [tool.poetry.group.lint.dependencies]
 mypy = "1.11.2"
+pre-commit = "4.0.1"
 django-stubs = "5.1.0"
 
 [tool.ruff]
@@ -246,11 +248,17 @@ extend-ignore-names = [
     "_meta",
 ]
 
+[tool.ruff.lint.pep8-naming]
+staticmethod-decorators = ["lookup_property.decorator.lookup_property"]
+
+[tool.ruff.lint.pydocstyle]
+property-decorators = ["lookup_property.decorator.lookup_property"]
+
 [tool.ruff.lint.pylint]
 max-args = 7
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 warn_return_any = "True"
 warn_unused_configs = "True"
 plugins = [
@@ -286,13 +294,14 @@ addopts = "-vv -s --log-cli-level=INFO"
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py{311, 312}-django{42, 50}
+envlist = py{311, 312, 313}-django{42, 50, 51}
 isolated_build = true
 
 [gh-actions]
 python =
     3.11: py311
     3.12: py312
+    3.13: py313
 
 [testenv]
 allowlist_externals =
@@ -303,6 +312,7 @@ setenv =
 deps =
     django42: Django >=4.2,<4.3
     django50: Django >=5.0,<5.1
+    django51: Django >=5.1,<5.2
 
     pytest
     coverage
@@ -314,5 +324,5 @@ commands =
 """
 
 [build-system]
-requires = ["poetry-core>=1.7.0"]
+requires = ["poetry-core>=1.9.0"]
 build-backend = "poetry.core.masonry.api"
