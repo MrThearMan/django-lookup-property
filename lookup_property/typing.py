@@ -2,23 +2,10 @@ from __future__ import annotations
 
 import random
 import string
+from collections.abc import Collection, Generator, Iterable
 from dataclasses import dataclass, field
 from types import FunctionType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Collection,
-    Concatenate,
-    Generator,
-    Iterable,
-    Literal,
-    ParamSpec,
-    Protocol,
-    Self,
-    TypeVar,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Callable, Concatenate, Literal, ParamSpec, Protocol, Self, TypeVar, cast
 
 from django.conf import settings
 from django.db import models
