@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import suppress
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
@@ -16,6 +16,8 @@ from django.utils.hashable import make_hashable
 from .typing import Sentinel
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from django.db.backends.base.base import BaseDatabaseWrapper
     from django.db.models.expressions import Col
     from django.db.models.lookups import Lookup, Transform

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any
 
 from django.db import models
 from django.db.models import ForeignObjectRel
@@ -10,6 +10,8 @@ from lookup_property.expressions import LookupPropertyCol
 from lookup_property.typing import Sentinel
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from django.db.models.fields.related import ForeignObject, ManyToManyField
     from django.db.models.query_utils import PathInfo
 
