@@ -1,18 +1,12 @@
-[tool.poetry]
+[project]
 name = "django-lookup-property"
 version = "0.1.7"
 description = "Django model properties that are also lookup expressions."
 authors = [
-    "Matti Lamppu <lamppu.matti.akseli@gmail.com>",
-]
-packages = [
-    { include = "lookup_property" },
+    { name = "Matti Lamppu", email = "lamppu.matti.akseli@gmail.com" },
 ]
 license = "MIT"
 readme = "README.md"
-homepage = "https://mrthearman.github.io/django-lookup-property"
-repository = "https://github.com/MrThearMan/django-lookup-property"
-documentation = "https://mrthearman.github.io/django-lookup-property"
 keywords = [
     "django",
     "lookup",
@@ -36,19 +30,23 @@ classifiers = [
     "Framework :: Django :: 5.0",
     "Framework :: Django :: 5.1",
 ]
-include = [
-    "README.md",
-    "LICENSE",
-]
-exclude = [
-    "tests",
+requires-python = ">=3.11,<4"
+dynamic = [
+    "dependencies",
 ]
 
-[tool.poetry.urls]
+[project.urls]
+"Homepage" = "https://mrthearman.github.io/django-lookup-property"
+"Repository" = "https://github.com/MrThearMan/django-lookup-property"
 "Bug Tracker" = "https://github.com/MrThearMan/django-lookup-property/issues"
+"Documentation" = "https://mrthearman.github.io/django-lookup-property"
+
+[tool.poetry]
+packages = [
+    { include = "lookup_property" },
+]
 
 [tool.poetry.dependencies]
-python = ">=3.11,<4"
 Django = ">=4.2"
 
 [tool.poetry.group.test.dependencies]
