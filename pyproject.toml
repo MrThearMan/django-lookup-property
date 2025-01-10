@@ -42,6 +42,7 @@ dynamic = [
 "Documentation" = "https://mrthearman.github.io/django-lookup-property"
 
 [tool.poetry]
+requires-poetry = ">=2.0.0"
 packages = [
     { include = "lookup_property" },
 ]
@@ -64,9 +65,7 @@ pymdown-extensions = "10.13"
 mkdocs-mermaid2-plugin = "1.2.1"
 
 [tool.poetry.group.lint.dependencies]
-mypy = "1.14.1"
 pre-commit = "4.0.1"
-django-stubs = "5.1.1"
 
 [tool.ruff]
 fix = true
@@ -254,14 +253,6 @@ property-decorators = ["lookup_property.decorator.lookup_property"]
 
 [tool.ruff.lint.pylint]
 max-args = 7
-
-[tool.mypy]
-python_version = "3.13"
-warn_return_any = "True"
-warn_unused_configs = "True"
-plugins = [
-    "mypy_django_plugin.main",
-]
 
 [tool.django-stubs]
 django_settings_module = "tests.project.settings"
