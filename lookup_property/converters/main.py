@@ -24,7 +24,7 @@ def ast_to_module(function_name: str, return_value: ast.AST, state: State) -> as
         ast.Import(names=[ast.alias(name=import_name)]) for import_name in state.imports
     ]
 
-    if isinstance(return_value, (ast.If, ast.Try)):  # pragma: no cover
+    if isinstance(return_value, ast.If | ast.Try):  # pragma: no cover
         function_body.append(return_value)
     else:
         function_body.append(ast.Return(value=return_value))
