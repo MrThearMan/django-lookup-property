@@ -309,7 +309,7 @@ def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr
         if hasattr(expression, "value"):
             expression.value = (
                 extend_expression_to_joined_table(expression.value, table_name)
-                if isinstance(expression.value, (models.F, models.Q, BaseExpression, L))
+                if isinstance(expression.value, models.F | models.Q | BaseExpression | L)
                 else expression.value
             )
         return expression
@@ -319,12 +319,12 @@ def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr
         children: list[tuple[str, Any] | models.Q | L] = expression.children  # type: ignore[assignment]
         expression.children = []
         for child in children:
-            if isinstance(child, (models.Q, L)):
+            if isinstance(child, models.Q | L):
                 expression.children.append(extend_expression_to_joined_table(child, table_name))
             else:
                 value = (
                     extend_expression_to_joined_table(child[1], table_name)
-                    if isinstance(child[1], (models.F, models.Q, BaseExpression))
+                    if isinstance(child[1], models.F | models.Q | BaseExpression)
                     else child[1]
                 )
                 expression.children.append((f"{table_name}{LOOKUP_SEP}{child[0]}", value))
@@ -347,7 +347,7 @@ def extend_expression_to_joined_table(expression: Expr, table_name: str) -> Expr
 
 
 def extend_subquery_to_joined_table(expression: Expr, table_name: str) -> Expr:
-    if isinstance(expression, (models.OuterRef, ResolvedOuterRef)):
+    if isinstance(expression, models.OuterRef | ResolvedOuterRef):
         expression = deepcopy(expression)
         expression.name = f"{table_name}{LOOKUP_SEP}{expression.name}"
         return expression
