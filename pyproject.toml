@@ -1,6 +1,6 @@
 [project]
 name = "django-lookup-property"
-version = "0.1.7"
+version = "0.1.8"
 description = "Django model properties that are also lookup expressions."
 authors = [
     { name = "Matti Lamppu", email = "lamppu.matti.akseli@gmail.com" },
