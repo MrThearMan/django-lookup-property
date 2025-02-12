@@ -45,6 +45,7 @@ class lookup_property:  # noqa: N801
             self.state = State(**kwargs)
 
         if isinstance(func, FunctionType):
+            self.__name__ = func.__name__
             self._expression: Callable[[], Expr] = lambda: func()
             if self.state.skip_codegen:
                 return
