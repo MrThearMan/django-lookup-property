@@ -44,6 +44,6 @@ def lookup_singledispatch(func: Callable[Concatenate[Str, P], T]) -> Dispatch[P,
 
         return impl(*args, **kwargs)
 
-    wrapper = cast(Dispatch[P, T, Str], wrapper)
+    wrapper = cast("Dispatch[P, T, Str]", wrapper)
     wrapper.register = register
     return wrapper
