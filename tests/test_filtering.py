@@ -21,51 +21,51 @@ pytestmark = [
 
 def test_filter_by_lookup_property():
     ExampleFactory.create()
-    assert Example.objects.filter(_full_name="foo bar").count() == 1
-    assert Example.objects.filter(_full_name="fizz buzz").count() == 0
+    assert Example.objects.filter(_lookup_property_full_name="foo bar").count() == 1
+    assert Example.objects.filter(_lookup_property_full_name="fizz buzz").count() == 0
     assert Example.objects.filter(L(full_name="foo bar")).count() == 1
 
 
 def test_filter_by_related_lookup_property__f():
     ThingFactory.create()
-    assert Thing.objects.filter(example___full_name="foo bar").count() == 1
-    assert Thing.objects.filter(example___full_name="fizz buzz").count() == 0
+    assert Thing.objects.filter(example___lookup_property_full_name="foo bar").count() == 1
+    assert Thing.objects.filter(example___lookup_property_full_name="fizz buzz").count() == 0
     assert Thing.objects.filter(L(example__full_name="foo bar")).count() == 1
 
 
 def test_filter_by_related_lookup_property__q():
     ThingFactory.create()
-    assert Thing.objects.filter(example___q=True).count() == 1
-    assert Thing.objects.filter(example___q=False).count() == 0
+    assert Thing.objects.filter(example___lookup_property_q=True).count() == 1
+    assert Thing.objects.filter(example___lookup_property_q=False).count() == 0
     assert Thing.objects.filter(L(example__q=True)).count() == 1
 
 
 def test_filter_by_related_lookup_property__case():
     ThingFactory.create()
-    assert Thing.objects.filter(example___case="foo").count() == 1
-    assert Thing.objects.filter(example___case="bar").count() == 0
+    assert Thing.objects.filter(example___lookup_property_case="foo").count() == 1
+    assert Thing.objects.filter(example___lookup_property_case="bar").count() == 0
     assert Thing.objects.filter(L(example__case="foo")).count() == 1
 
 
 def test_filter_by_lookup_property__only():
     ExampleFactory.create()
-    assert Example.objects.filter(_full_name="foo bar").only("first_name").count() == 1
-    assert Example.objects.filter(_full_name="fizz buzz").only("last_name").count() == 0
+    assert Example.objects.filter(_lookup_property_full_name="foo bar").only("first_name").count() == 1
+    assert Example.objects.filter(_lookup_property_full_name="fizz buzz").only("last_name").count() == 0
     assert Example.objects.filter(L(full_name="foo bar")).only("first_name").count() == 1
 
 
 def test_filter_by_lookup_property__with_lookup_expression():
     ExampleFactory.create()
-    assert Example.objects.filter(_full_name__contains="foo").count() == 1
-    assert Example.objects.filter(_full_name__contains="fizz").count() == 0
+    assert Example.objects.filter(_lookup_property_full_name__contains="foo").count() == 1
+    assert Example.objects.filter(_lookup_property_full_name__contains="fizz").count() == 0
     assert Example.objects.filter(L(full_name__contains="foo")).count() == 1
 
 
 def test_filter_by_lookup_property__with_transform_expression():
     ExampleFactory.create()
-    assert Example.objects.filter(_full_name=Upper("_full_name")).count() == 0
-    assert Example.objects.filter(_full_name=Lower("_full_name")).count() == 1
-    assert Example.objects.filter(L(full_name=Upper("_full_name"))).count() == 0
+    assert Example.objects.filter(_lookup_property_full_name=Upper("_lookup_property_full_name")).count() == 0
+    assert Example.objects.filter(_lookup_property_full_name=Lower("_lookup_property_full_name")).count() == 1
+    assert Example.objects.filter(L(full_name=Upper("_lookup_property_full_name"))).count() == 0
 
 
 def test_filter_by_lookup_property__subquery():
@@ -73,7 +73,7 @@ def test_filter_by_lookup_property__subquery():
     ExampleFactory.create(first_name="a", last_name="a", other=other)
     ExampleFactory.create(first_name="b", last_name="b", other=other)
 
-    subquery = Example.objects.filter(_full_name="a a").values("pk")
+    subquery = Example.objects.filter(_lookup_property_full_name="a a").values("pk")
     assert Other.objects.filter(examples__in=models.Subquery(subquery)).count() == 1
 
     subquery = Example.objects.filter(L(full_name="a a")).values("pk")
@@ -85,7 +85,7 @@ def test_filter_by_lookup_property__subquery__outer_ref():
     example_2 = ExampleFactory.create(first_name="b", last_name="b")
     PartFactory.create(name="a a", examples=[example_1, example_2])
 
-    subquery = Part.objects.filter(name=models.OuterRef("_full_name")).values("pk")
+    subquery = Part.objects.filter(name=models.OuterRef("_lookup_property_full_name")).values("pk")
     assert Example.objects.filter(parts__in=models.Subquery(subquery)).count() == 1
 
 
@@ -103,8 +103,8 @@ def test_filter_by_lookup_property__subquery__exists():
     ExampleFactory.create(first_name="a", last_name="a", other=other)
     ExampleFactory.create(first_name="b", last_name="b", other=other)
 
-    subquery_1 = models.Exists(Example.objects.filter(_full_name="a a").values("pk"))
-    subquery_2 = models.Exists(Example.objects.filter(_full_name="c c").values("pk"))
+    subquery_1 = models.Exists(Example.objects.filter(_lookup_property_full_name="a a").values("pk"))
+    subquery_2 = models.Exists(Example.objects.filter(_lookup_property_full_name="c c").values("pk"))
     other = Other.objects.annotate(has_a=subquery_1, has_c=subquery_2).first()
     assert other.has_a is True
     assert other.has_c is False
@@ -304,9 +304,7 @@ def test_filter_by_lookup_property__count_rel_many_to_one():
 
     assert example.count_rel_many_to_one == 3  # python code
     example = (
-        Example.objects.annotate(count_rel_many_to_one=L("count_rel_many_to_one"))  #
-        .filter(totals__far__number=2)
-        .first()
+        Example.objects.annotate(count_rel_many_to_one=L("count_rel_many_to_one")).filter(totals__far__number=2).first()
     )
     assert example.count_rel_many_to_one == 3  # annotated value
 
@@ -323,7 +321,7 @@ def test_filter_by_lookup_property__count_rel_many_to_man():
 
     assert example.count_rel_many_to_one == 3  # python code
     example = (
-        Example.objects.annotate(count_rel_many_to_many=L("count_rel_many_to_many"))  #
+        Example.objects.annotate(count_rel_many_to_many=L("count_rel_many_to_many"))
         .filter(parts__far__number=2)
         .first()
     )

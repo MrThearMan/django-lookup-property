@@ -1,6 +1,6 @@
 [project]
 name = "django-lookup-property"
-version = "0.1.8"
+version = "0.2.0"
 description = "Django model properties that are also lookup expressions."
 authors = [
     { name = "Matti Lamppu", email = "lamppu.matti.akseli@gmail.com" },
@@ -29,6 +29,7 @@ classifiers = [
     "Framework :: Django :: 4.2",
     "Framework :: Django :: 5.0",
     "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
 ]
 requires-python = ">=3.11,<4"
 dynamic = [
@@ -66,6 +67,8 @@ mkdocs-mermaid2-plugin = "1.2.1"
 
 [tool.poetry.group.lint.dependencies]
 pre-commit = "4.2.0"
+mypy = "1.17.1"
+django-stubs = "5.2.2"
 
 [tool.ruff]
 fix = true
@@ -160,8 +163,8 @@ lint.ignore = [
     "G004",     # Logging statement uses f-string
     "S602",     # Broken: https://github.com/astral-sh/ruff/issues/4045
     "S603",     # Broken: https://github.com/astral-sh/ruff/issues/4045
-    "TCH001",
-    "TCH002",
+    "TC001",    # Typing only imports
+    "TC002",    # Typing only imports
     #
     # Conflicting with ruff-format
     #
@@ -253,6 +256,9 @@ property-decorators = ["lookup_property.decorator.lookup_property"]
 [tool.ruff.lint.pylint]
 max-args = 7
 
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+
 [tool.django-stubs]
 django_settings_module = "tests.project.settings"
 
@@ -282,7 +288,7 @@ addopts = "-vv -s --log-cli-level=INFO"
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py{311, 312, 313}-django{42, 50, 51}
+envlist = py{311, 312, 313}-django{42, 50, 51, 52}
 isolated_build = true
 
 [gh-actions]
@@ -301,6 +307,7 @@ deps =
     django42: Django >=4.2,<4.3
     django50: Django >=5.0,<5.1
     django51: Django >=5.1,<5.2
+    django52: Django >=5.2,<5.3
 
     pytest
     coverage

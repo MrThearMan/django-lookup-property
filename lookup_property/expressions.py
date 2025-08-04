@@ -13,7 +13,7 @@ from django.db.models.expressions import BaseExpression, Combinable, NegatedExpr
 from django.db.models.sql import Query
 from django.utils.hashable import make_hashable
 
-from .typing import Sentinel
+from .typing import LOOKUP_PREFIX, Sentinel
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -209,7 +209,7 @@ class L(Combinable):
     ) -> ExpressionKind:
         """Resolve lookup expression and either return it or build a lookup expression based on it."""
         field, lookup_parts, joined_tables = self.find_lookup_property_field(query)
-        lookup_name = field.attname.removeprefix("_")
+        lookup_name = field.attname.removeprefix(LOOKUP_PREFIX)
         expression = field.expression
         for table_name in reversed(joined_tables):
             expression = extend_expression_to_joined_table(expression, table_name)
@@ -242,7 +242,7 @@ class L(Combinable):
         >>> l.find_lookup_property_field(query)
         (LookupPropertyField(<full_name>), ['contains'], ['example'])
         """
-        from .field import LookupPropertyField
+        from .field import LookupPropertyField  # noqa: PLC0415
 
         joined_tables: list[str] = []
         lookup = self.lookup
@@ -255,10 +255,10 @@ class L(Combinable):
 
         while True:
             try:
-                field: LookupPropertyField = query.model._meta.get_field(field_name)
+                field: LookupPropertyField = query.model._meta.get_field(field_name)  # type: ignore[assignment]
             except FieldDoesNotExist:
-                # Lookup property fields are prefixed with "_" to enable aliasing with the same name.
-                field: LookupPropertyField = query.model._meta.get_field(f"_{field_name}")
+                # Lookup property fields are prefixed to enable aliasing with the same name.
+                field = query.model._meta.get_field(f"{LOOKUP_PREFIX}{field_name}")  # type: ignore[assignment]
 
             # If the field is not a lookup property, it should be a related field.
             # Keep track of the joined table, switch the query object to the related object,

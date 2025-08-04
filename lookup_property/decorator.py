@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, overload
 
 from .converters.main import ast_module_to_function, query_expression_ast_module
 from .field import LookupPropertyField
-from .typing import FunctionType, Sentinel, State
+from .typing import LOOKUP_PREFIX, FunctionType, Sentinel, State
 
 if TYPE_CHECKING:
     from django.db import models
@@ -99,8 +99,10 @@ class lookup_property:  # noqa: N801
         # Called by `django.db.models.base.ModelBase.add_to_class`
         field = LookupPropertyField(cls, target_property=self)
         field.set_attributes_from_name(name)
-        field.name = field.attname = f"_{name}"  # Enable using aliases with the same name as the field
+        field.name = field.attname = f"{LOOKUP_PREFIX}{name}"  # Enable using aliases with the same name as the field
         field.concrete = self.state.concrete  # if False -> Don't include field in `SELECT` statements
+        field.generated = True  # Don't validate field when `model.clean_fields()` is called.
+        field.hidden = True  # Don't include field in `model._meta.get_fields()` by default.
         cls._meta.add_field(field, private=True)
         setattr(cls, name, self)
 

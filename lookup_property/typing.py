@@ -5,7 +5,7 @@ import string
 from collections.abc import Callable, Collection, Generator, Iterable
 from dataclasses import dataclass, field
 from types import FunctionType
-from typing import TYPE_CHECKING, Any, Concatenate, Literal, ParamSpec, Protocol, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Literal, ParamSpec, Protocol, Self, TypeAlias, TypeVar, cast
 
 from django.conf import settings
 from django.db import models
@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from django.db.models.sql import Query
 
 __all__ = [
+    "LOOKUP_PREFIX",
     "Any",
     "Callable",
     "Collection",
@@ -38,7 +39,9 @@ __all__ = [
 
 
 TModel = TypeVar("TModel", bound=models.Model)
-Expr = BaseExpression | Combinable | models.Q
+Expr: TypeAlias = BaseExpression | Combinable | models.Q
+
+LOOKUP_PREFIX = "_lookup_property_"
 
 
 class ExpressionKind(Protocol):
