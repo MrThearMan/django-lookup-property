@@ -52,20 +52,20 @@ Django = ">=5.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "8.4.1"
-coverage = "7.10.2"
+coverage = "7.10.6"
 pytest-django = "4.11.1"
-freezegun = "1.5.4"
-tox = "4.28.4"
+freezegun = "1.5.5"
+tox = "4.29.0"
 tox-gh-actions = "3.3.0"
 factory-boy = "3.3.3"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "1.6.1"
 pymdown-extensions = "10.16.1"
-mkdocs-mermaid2-plugin = "1.2.1"
+mkdocs-mermaid2-plugin = "1.2.2"
 
 [tool.poetry.group.lint.dependencies]
-pre-commit = "4.2.0"
+pre-commit = "4.3.0"
 mypy = "1.17.1"
 django-stubs = "5.2.2"
 
