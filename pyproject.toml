@@ -1,6 +1,6 @@
 [project]
 name = "django-lookup-property"
-version = "0.2.0"
+version = "0.1.7"
 description = "Django model properties that are also lookup expressions."
 authors = [
     { name = "Matti Lamppu", email = "lamppu.matti.akseli@gmail.com" },
@@ -51,23 +51,20 @@ packages = [
 Django = ">=5.0"
 
 [tool.poetry.group.test.dependencies]
-pytest = "8.4.1"
-coverage = "7.10.2"
+pytest = "8.4.2"
+coverage = "7.10.6"
 pytest-django = "4.11.1"
-freezegun = "1.5.4"
-tox = "4.28.4"
-tox-gh-actions = "3.3.0"
+freezegun = "1.5.5"
+nox = "2025.5.1"
 factory-boy = "3.3.3"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "1.6.1"
 pymdown-extensions = "10.16.1"
-mkdocs-mermaid2-plugin = "1.2.1"
+mkdocs-mermaid2-plugin = "1.2.2"
 
 [tool.poetry.group.lint.dependencies]
-pre-commit = "4.2.0"
-mypy = "1.17.1"
-django-stubs = "5.2.2"
+pre-commit = "4.3.0"
 
 [tool.ruff]
 fix = true
@@ -162,8 +159,8 @@ lint.ignore = [
     "G004",     # Logging statement uses f-string
     "S602",     # Broken: https://github.com/astral-sh/ruff/issues/4045
     "S603",     # Broken: https://github.com/astral-sh/ruff/issues/4045
-    "TC001",    # Typing only imports
-    "TC002",    # Typing only imports
+    "TCH001",
+    "TCH002",
     #
     # Conflicting with ruff-format
     #
@@ -255,9 +252,6 @@ property-decorators = ["lookup_property.decorator.lookup_property"]
 [tool.ruff.lint.pylint]
 max-args = 7
 
-[tool.mypy]
-plugins = ["mypy_django_plugin.main"]
-
 [tool.django-stubs]
 django_settings_module = "tests.project.settings"
 
@@ -283,38 +277,6 @@ exclude_lines = [
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.project.settings"
 addopts = "-vv -s --log-cli-level=INFO"
-
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-envlist = py{311, 312, 313}-django{50, 51, 52}
-isolated_build = true
-
-[gh-actions]
-python =
-    3.11: py311
-    3.12: py312
-    3.13: py313
-
-[testenv]
-allowlist_externals =
-    poetry
-setenv =
-    PYTHONPATH = {toxinidir}
-    DJANGO_SETTINGS_MODULE = tests.project.settings
-deps =
-    django50: Django >=5.0,<5.1
-    django51: Django >=5.1,<5.2
-    django52: Django >=5.2,<5.3
-
-    pytest
-    coverage
-    pytest-django
-    freezegun
-    factory-boy
-commands =
-    coverage run -m pytest -vv -s --log-cli-level=INFO
-"""
 
 [build-system]
 requires = ["poetry-core>=1.9.0"]
