@@ -40,8 +40,8 @@ sync:
 
 # Run a specific test by name
 test name:
-    @poetry run pytest -k "{{name}}"
+    @PYTEST_PLUGINS=tests.plugins poetry run pytest -k "{{name}}"
 
 # Run all tests
 tests:
-    @poetry run coverage run -m pytest
+    @PYTEST_PLUGINS=tests.plugins poetry run coverage run -m pytest
