@@ -1,12 +1,8 @@
-import os
 from functools import partial
+from typing import Any, Callable, Generator
 
 import pytest
 from django.db import connection
-
-from lookup_property.typing import Any, Callable, Generator
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "example_project.project.settings")
 
 
 def log_query(

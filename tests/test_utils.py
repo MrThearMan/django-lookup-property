@@ -5,7 +5,6 @@ from django.db.models.functions import Upper
 from example_project.example.models import Example
 from lookup_property import L
 from lookup_property.expressions import extend_expression_to_joined_table
-from lookup_property.typing import random_arg_name
 
 
 def test_lookup_property__repr():
@@ -30,11 +29,6 @@ def test_lookup_property__col_repr():
 
 def test_lookup_property__name():
     assert Example.full_name.__name__ == "full_name"
-
-
-def test_random_arg_name():
-    assert len(random_arg_name()) == 20
-    assert random_arg_name() != random_arg_name()
 
 
 def test_l__unpack():
