@@ -73,12 +73,14 @@ line-length = 120
 extend-exclude = [
     "tests*",
 ]
-lint.typing-modules = [
+
+[tool.ruff.lint]
+typing-modules = [
     "lookup_property.typing",
 ]
-lint.explicit-preview-rules = true
-lint.preview = true
-lint.select = [
+explicit-preview-rules = true
+preview = true
+select = [
     "A",        # flake8-builtins
     "ANN",      # flake8-annotations
     "ARG",      # flake8-unused-arguments
@@ -131,7 +133,7 @@ lint.select = [
     "W",        # pycodestyle warnings
 ]
 # Preview rules
-lint.extend-select = [
+extend-select = [
     "B909",     # loop-iterator-mutation
     "FURB110",  # if-exp-instead-of-or-operator
     "FURB142",  # for-loop-set-mutations
@@ -150,7 +152,7 @@ lint.extend-select = [
     "RUF022",   # unsorted-dunder-all
     "UP042",    # replace-str-enum
 ]
-lint.ignore = [
+ignore = [
     "A005",     # Allow shadowing builtin modules
     "ANN401",   # Any-typing allowed
     "ARG001",   # Unused function argument
@@ -200,6 +202,12 @@ lint.ignore = [
     "ARG",      # Fixtures can be unused
     "ANN",      # No need to annotate tests
     "UP",       # No upgrade rules
+]
+"lookup_property/converters/*.py" = [
+    # No typing only-inputs
+    "TC001",
+    "TC002",
+    "TC003",
 ]
 
 [tool.ruff.lint.isort]
