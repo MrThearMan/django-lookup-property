@@ -30,16 +30,15 @@ def python_versions() -> list[str]:
 
 
 @nox.session(python=python_versions(), reuse_venv=True)
-@nox.parametrize("django", ["5.0", "5.1", "5.2"])
+@nox.parametrize("django", ["5.0.*", "5.1.*", "5.2.*"])
 def tests(session: nox.Session, django: str) -> None:
-    env = {
-        "POETRY_VIRTUALENVS_PATH": str(Path(session.virtualenv.bin).parent),
-    }
+    env = {"POETRY_VIRTUALENVS_PATH": str(Path(session.virtualenv.bin).parent)}
 
     session.run_install("poetry", "install", "--all-extras", external=True, env=env)
-    session.install(f"django=={django}.*")
+    session.install(f"django=={django}")
 
-    session.run("coverage", "run", "-m", "pytest", external="error")
+    env = {"PYTEST_PLUGINS": "tests.plugins"}
+    session.run("coverage", "run", "-m", "pytest", external="error", env=env)
 
 
 if __name__ == "__main__":
