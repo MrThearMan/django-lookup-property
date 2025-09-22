@@ -72,11 +72,11 @@ def get_source(value: str) -> ast.stmt:
 def print_str_as_ast(input_string: str) -> None:
     source = get_source(cleandoc(input_string))
     data = to_dict(source)
-    print("----------------------------------")
-    print(ast.unparse(source))
-    print("----------------------------------")
-    print(json.dumps(data, indent=2, sort_keys=True, default=str))
-    print("----------------------------------")
+    print("----------------------------------")  # noqa: T201, RUF100
+    print(ast.unparse(source))  # noqa: T201, RUF100
+    print("----------------------------------")  # noqa: T201, RUF100
+    print(json.dumps(data, indent=2, sort_keys=True, default=str))  # noqa: T201, RUF100
+    print("----------------------------------")  # noqa: T201, RUF100
 
 
 if __name__ == "__main__":

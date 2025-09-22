@@ -2,16 +2,16 @@ from django.db.models import F, Q
 from django.db.models.expressions import CombinedExpression, NegatedExpression
 from django.db.models.functions import Upper
 
+from example_project.example.models import Example
 from lookup_property import L
 from lookup_property.expressions import extend_expression_to_joined_table
 from lookup_property.typing import random_arg_name
-from tests.example.models import Example
 
 
 def test_lookup_property__repr():
     assert (
         repr(Example.full_name)
-        == "lookup_property(Concat(ConcatPair(F(first_name), ConcatPair(Value(' '), F(last_name)))))"
+        == "LookupPropertyDescriptor(Concat(ConcatPair(F(first_name), ConcatPair(Value(' '), F(last_name)))))"
     )
 
 

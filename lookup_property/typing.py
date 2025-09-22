@@ -5,7 +5,19 @@ import string
 from collections.abc import Callable, Collection, Generator, Iterable
 from dataclasses import dataclass, field
 from types import FunctionType
-from typing import TYPE_CHECKING, Any, Concatenate, Literal, ParamSpec, Protocol, Self, TypeAlias, TypeVar, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Concatenate,
+    Literal,
+    ParamSpec,
+    Protocol,
+    Self,
+    TypeAlias,
+    TypedDict,
+    TypeVar,
+    cast,
+)
 
 from django.conf import settings
 from django.db import models
@@ -30,14 +42,17 @@ __all__ = [
     "ModelMethod",
     "ParamSpec",
     "Protocol",
+    "R",
     "Self",
     "State",
+    "StateArgs",
     "TModel",
     "TypeVar",
     "cast",
 ]
 
 
+R = TypeVar("R")
 TModel = TypeVar("TModel", bound=models.Model)
 Expr: TypeAlias = BaseExpression | Combinable | models.Q
 
@@ -77,9 +92,19 @@ class RandomKeyDict(dict[str, Any]):
 
 @dataclass
 class State:
-    imports: set[str] = field(default_factory=set)
-    use_tz: bool = field(default_factory=lambda: settings.USE_TZ)
-    extra_kwargs: RandomKeyDict = field(default_factory=RandomKeyDict)
     joins: list[str] = field(default_factory=list)
+    use_tz: bool = field(default_factory=lambda: settings.USE_TZ)
     skip_codegen: bool = False
     concrete: bool = False
+    hidden: bool = True
+
+    imports: set[str] = field(default_factory=set, init=False)
+    extra_kwargs: RandomKeyDict = field(default_factory=RandomKeyDict, init=False)
+
+
+class StateArgs(TypedDict, total=False):
+    joins: list[str]
+    skip_codegen: bool
+    use_tz: bool
+    concrete: bool
+    hidden: bool

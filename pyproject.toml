@@ -159,8 +159,8 @@ lint.ignore = [
     "G004",     # Logging statement uses f-string
     "S602",     # Broken: https://github.com/astral-sh/ruff/issues/4045
     "S603",     # Broken: https://github.com/astral-sh/ruff/issues/4045
-    "TCH001",
-    "TCH002",
+    "DJ001",    # Allow null=True on models
+    "DJ008",    # Models dont need to define __str__
     #
     # Conflicting with ruff-format
     #
@@ -253,7 +253,7 @@ property-decorators = ["lookup_property.decorator.lookup_property"]
 max-args = 7
 
 [tool.django-stubs]
-django_settings_module = "tests.project.settings"
+django_settings_module = "example_project.project.settings"
 
 [tool.coverage.run]
 relative_files = true
@@ -275,7 +275,7 @@ exclude_lines = [
 ]
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "tests.project.settings"
+DJANGO_SETTINGS_MODULE = "example_project.project.settings"
 addopts = "-vv -s --log-cli-level=INFO"
 
 [build-system]

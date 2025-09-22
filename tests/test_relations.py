@@ -1,7 +1,7 @@
 import pytest
 
+from example_project.example.models import Example
 from lookup_property import L
-from tests.example.models import Example
 from tests.factories import ChildFactory, ExampleFactory, OtherFactory, PartFactory, ThingFactory, TotalFactory
 
 pytestmark = [

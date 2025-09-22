@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import datetime
+from typing import TYPE_CHECKING
 
 import factory
 from factory.django import DjangoModelFactory
 
-from lookup_property.typing import Any, Iterable
-from tests.example.models import (
+from example_project.example.models import (
     Alien,
     AnotherConcrete,
     Child,
@@ -19,6 +19,9 @@ from tests.example.models import (
     Thing,
     Total,
 )
+
+if TYPE_CHECKING:
+    from lookup_property.typing import Any, Iterable
 
 __all__ = [
     "AlienFactory",
@@ -82,7 +85,7 @@ class ExampleFactory(DjangoModelFactory):
         return super().create(**kwargs)
 
     @factory.post_generation
-    def children(self, create: bool, items: Iterable[Child] | None, **kwargs: Any) -> None:
+    def children(self, create: bool, items: Iterable[Child] | None, **kwargs: Any) -> None:  # noqa: FBT001
         if not create:
             return
 
@@ -93,7 +96,7 @@ class ExampleFactory(DjangoModelFactory):
             self.children.add(item)
 
     @factory.post_generation
-    def parts(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:
+    def parts(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:  # noqa: FBT001
         if not create:
             return
 
@@ -118,7 +121,7 @@ class FarFactory(DjangoModelFactory):
         return super().create(**kwargs)
 
     @factory.post_generation
-    def parts(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:
+    def parts(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:  # noqa: FBT001
         if not create:
             return
 
@@ -142,7 +145,7 @@ class AlienFactory(DjangoModelFactory):
         return super().create(**kwargs)
 
     @factory.post_generation
-    def parts(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:
+    def parts(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:  # noqa: FBT001
         if not create:
             return
 
@@ -153,7 +156,7 @@ class AlienFactory(DjangoModelFactory):
             self.parts.add(item)
 
     @factory.post_generation
-    def things(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:
+    def things(self, create: bool, items: Iterable[Part] | None, **kwargs: Any) -> None:  # noqa: FBT001
         if not create:
             return
 
@@ -178,7 +181,7 @@ class ThingFactory(DjangoModelFactory):
         return super().create(**kwargs)
 
     @factory.post_generation
-    def aliens(self, create: bool, items: Iterable[Alien] | None, **kwargs: Any) -> None:
+    def aliens(self, create: bool, items: Iterable[Alien] | None, **kwargs: Any) -> None:  # noqa: FBT001
         if not create:
             return
 
@@ -215,7 +218,7 @@ class PartFactory(DjangoModelFactory):
         return super().create(**kwargs)
 
     @factory.post_generation
-    def examples(self, create: bool, items: Iterable[Example] | None, **kwargs: Any) -> None:
+    def examples(self, create: bool, items: Iterable[Example] | None, **kwargs: Any) -> None:  # noqa: FBT001
         if not create:
             return
 
@@ -226,7 +229,7 @@ class PartFactory(DjangoModelFactory):
             self.examples.add(item)
 
     @factory.post_generation
-    def aliens(self, create: bool, items: Iterable[Alien] | None, **kwargs: Any) -> None:
+    def aliens(self, create: bool, items: Iterable[Alien] | None, **kwargs: Any) -> None:  # noqa: FBT001
         if not create:
             return
 

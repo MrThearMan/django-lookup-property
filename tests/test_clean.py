@@ -1,8 +1,7 @@
-
 import pytest
 from django.utils import timezone
 
-from tests.example.models import Example
+from example_project.example.models import Example
 from tests.factories import OtherFactory, QuestionFactory
 
 

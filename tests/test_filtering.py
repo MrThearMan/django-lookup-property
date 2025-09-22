@@ -2,8 +2,8 @@ import pytest
 from django.db import models
 from django.db.models.functions import Lower, Upper
 
+from example_project.example.models import Example, Far, Other, Part, Thing, Total
 from lookup_property import L
-from tests.example.models import Example, Far, Other, Part, Thing, Total
 from tests.factories import (
     AlienFactory,
     ExampleFactory,

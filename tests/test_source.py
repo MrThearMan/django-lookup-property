@@ -1,6 +1,6 @@
 from inspect import cleandoc
 
-from tests.example.models import Example
+from example_project.example.models import Example
 
 
 def test_lookup_property__f_ref__source():
@@ -106,7 +106,7 @@ def test_lookup_property__reverse_one_to_many__source():
     assert Example.reverse_one_to_many.func_source == cleandoc(
         """
         @reverse_one_to_many.override
-        def _(self):
+        def _(self) -> int | None:
             return self.totals.values_list('pk', flat=True).first()
         """,
     )
@@ -116,7 +116,7 @@ def test_lookup_property__forward_many_to_many__source():
     assert Example.forward_many_to_many.func_source == cleandoc(
         """
         @forward_many_to_many.override
-        def _(self):
+        def _(self) -> int | None:
             return self.children.values_list('pk', flat=True).first()
         """,
     )
@@ -126,7 +126,7 @@ def test_lookup_property__reverse_many_to_many__source():
     assert Example.reverse_many_to_many.func_source == cleandoc(
         """
         @reverse_many_to_many.override
-        def _(self):
+        def _(self) -> int | None:
             return self.parts.values_list('pk', flat=True).first()
         """,
     )
@@ -1298,7 +1298,7 @@ def test_lookup_property__count_rel_many_to_one__source():
     assert Example.count_rel_many_to_one.func_source == cleandoc(
         """
         @count_rel_many_to_one.override
-        def _(self):
+        def _(self) -> int:
             return self.totals.aggregate(_count=models.Count('aliens'))['_count']
         """,
     )
@@ -1308,7 +1308,7 @@ def test_lookup_property__count_rel_many_to_many__source():
     assert Example.count_rel_many_to_many.func_source == cleandoc(
         """
         @count_rel_many_to_many.override
-        def _(self):
+        def _(self) -> int:
             return self.parts.aggregate(_count=models.Count('aliens'))['_count']
         """,
     )

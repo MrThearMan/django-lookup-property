@@ -1,7 +1,7 @@
 import pytest
 
+from example_project.example.models import Example
 from lookup_property.typing import Sentinel
-from tests.example.models import Example
 from tests.factories import AnotherConcreteFactory, ConcreteFactory, ExampleFactory, ThingFactory
 
 pytestmark = [

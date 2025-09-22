@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = True
 SECRET_KEY = get_random_secret_key()
-ROOT_URLCONF = "tests.project.urls"
+ROOT_URLCONF = "example_project.project.urls"
 WSGI_APPLICATION = "tests.project.wsgi.application"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -19,7 +19,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "tests.example",
+    "example_project.example",
 ]
 
 MIDDLEWARE = [

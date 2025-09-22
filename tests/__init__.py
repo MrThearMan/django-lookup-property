@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import django
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.project.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "example_project.project.settings")
 
 counter = itertools.count()
 
