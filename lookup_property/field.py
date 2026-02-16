@@ -38,7 +38,7 @@ class LookupPropertyDescriptor(Generic[R]):
         self.state = State(**kwargs)
 
         self.__name__ = func.__name__
-        self._expression: Callable[[], Expr] = lambda: func()
+        self._expression: Callable[[], Expr] = func
         if self.state.skip_codegen:
             return
 
