@@ -50,14 +50,14 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-Django = ">=5.0"
+Django = ">=5.2.13"
 
 [tool.poetry.group.test.dependencies]
-pytest = "9.0.2"
+pytest = "9.0.3"
 pytest-django = "4.12.0"
 coverage = "7.13.5"
 freezegun = "1.5.5"
-nox = "2026.2.9"
+nox = "2026.4.10"
 factory-boy = "3.3.3"
 
 [tool.poetry.group.docs.dependencies]
