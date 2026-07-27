@@ -34,7 +34,7 @@ def expression_to_ast(expression: object, state: State) -> ast.AST:
 
 
 @expression_to_ast.register
-def _(expression: None | str | int | float | bool | bytes, state: State) -> ast.Constant:  # noqa: PYI041, FBT001
+def _(expression: str | int | float | bool | bytes | None, state: State) -> ast.Constant:  # noqa: PYI041, FBT001
     """Convert builtin values to constants"""
     return ast.Constant(value=expression)
 
