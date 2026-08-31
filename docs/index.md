@@ -31,6 +31,7 @@ from django.db import models
 from django.db.models import Value
 from django.db.models.functions import Concat
 
+
 class Student(models.Model):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)

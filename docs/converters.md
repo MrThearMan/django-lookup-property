@@ -18,6 +18,7 @@ from django.db import models
 from django.db.models import Value
 from django.db.models.functions import Concat
 
+
 class Student(models.Model):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
@@ -36,11 +37,13 @@ from django.db.models import functions
 from lookup_property import expression_to_ast, State
 from lookup_property.converters.utils import ast_property
 
+
 @expression_to_ast.register
 def _(expression: str, state: State) -> ast.Constant:
     # Called by converters for Value and ConcatPair to convert
     # the strings they contain to ast constants.
     return ast.Constant(value=expression)
+
 
 @expression_to_ast.register
 def _(expression: models.Value, state: State) -> ast.AST:
@@ -48,11 +51,13 @@ def _(expression: models.Value, state: State) -> ast.AST:
     # Notice `expression_to_ast` is called recursively.
     return expression_to_ast(expression.value, state)
 
+
 @expression_to_ast.register
 def _(expression: models.F, state: State) -> ast.Attribute:
     # Convert F-objects to self-attributes.
     # This is such a common operation that the library provides a utility for it.
     return ast_property(expression.name)
+
 
 @expression_to_ast.register
 def _(expression: functions.Concat, state: State) -> ast.AST:
@@ -61,6 +66,7 @@ def _(expression: functions.Concat, state: State) -> ast.AST:
     # Convert the concat pairs recursively.
     source_expressions = expression.get_source_expressions()
     return expression_to_ast(source_expressions[0], state)
+
 
 @expression_to_ast.register
 def _(expression: functions.ConcatPair, state: State) -> ast.BinOp:
@@ -84,6 +90,7 @@ For example, to convert the following lookup-property:
 from lookup_property import lookup_property
 from django.db import models
 
+
 class Student(models.Model):
     name = models.CharField(max_length=256)
 
@@ -99,6 +106,7 @@ import ast
 from django.db.models import lookups
 from lookup_property import lookup_to_ast, expression_to_ast, State
 from lookup_property.converters.utils import ast_method
+
 
 # This is a custom single-dispatch function, and registering works
 # a bit differently: `lookup` keyword must be specified for register.
@@ -119,6 +127,7 @@ and can be used to select a proper callable for conversion.
 import ast
 from django.db import models
 from lookup_property import State, convert_django_field
+
 
 @convert_django_field.register
 def _(field: models.BooleanField, state: State) -> ast.Name:

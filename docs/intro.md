@@ -26,6 +26,7 @@ from django.db import models
 from django.db.models import Value
 from django.db.models.functions import Concat
 
+
 class Student(models.Model):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
@@ -87,6 +88,7 @@ you can override the generated expression with a custom one:
 from lookup_property import lookup_property
 from django.db import models
 
+
 class Student(models.Model):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
@@ -118,12 +120,14 @@ work without any additional setup in some cases, it's recommended to specify the
 from lookup_property import lookup_property
 from django.db import models
 
+
 class Student(models.Model):
     ...
 
     @lookup_property(joins=["classes"])
     def number_of_classes(self):
         return models.Count("classes")
+
 
 class Class(models.Model):
     students = models.ManyToManyField(Student, related_name="classes")
@@ -141,6 +145,7 @@ If you do want this behavior, you can use the `concrete` argument to always
 ```python
 from lookup_property import lookup_property
 from django.db import models
+
 
 class Student(models.Model):
     ...
