@@ -11,8 +11,11 @@ from django.db import models
 from django.db.models import Q, sql
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.expressions import BaseExpression, Combinable, NegatedExpression, ResolvedOuterRef
+from django.db.models.functions import Coalesce
+from django.db.models.lookups import IsNull
 from django.db.models.sql import Query
 from django.db.models.sql.datastructures import Join
+from django.db.models.sql.where import AND, WhereNode
 from django.utils.hashable import make_hashable
 
 from .typing import LOOKUP_PREFIX, SUBQUERY_VALUE, Sentinel, cast
@@ -24,7 +27,6 @@ if TYPE_CHECKING:
     from django.db.models.expressions import Col
     from django.db.models.lookups import Lookup, Transform
     from django.db.models.sql.compiler import SQLCompiler
-    from django.db.models.sql.where import WhereNode
 
     from .field import LookupPropertyField
     from .typing import Any, ConvertFunc, Expr, ExpressionKind
@@ -221,7 +223,16 @@ class L(Combinable):
             return resolved
 
         value = query.resolve_lookup_value(self.value, reuse, allow_joins, summarize)
-        return query.build_lookup(lookup_parts, resolved, value)
+        lookup = query.build_lookup(lookup_parts, resolved, value)
+        if lookup.lookup_name == "isnull" or getattr(resolved, "conditional", False):
+            return lookup  # type: ignore[no-any-return]
+
+        # Without this, negating the condition would also exclude rows where the expression is NULL,
+        # since `NOT (NULL = value)` is NULL. Django's `exclude()` handles nullable fields the same way.
+        if contains_subquery(resolved):
+            # Checking the expression for NULL separately would run its subqueries twice.
+            return Coalesce(lookup, models.Value(False), output_field=models.BooleanField())  # type: ignore[return-value]  # noqa: FBT003
+        return WhereNode([lookup, IsNull(resolved, rhs=False)], connector=AND)  # type: ignore[list-item,return-value]
 
     def property_expression(self, field: LookupPropertyField, joined_tables: list[str]) -> Expr:
         """Get the lookup property's expression, as referenced from the model at the start of the lookup."""
@@ -328,6 +339,14 @@ def correlated_subquery(model: type[models.Model], expression: Expr) -> models.S
         .values(SUBQUERY_VALUE)[:1]
     )
     return models.Subquery(queryset)
+
+
+def contains_subquery(expression: Any) -> bool:
+    if isinstance(expression, models.Subquery | Query):
+        return True
+    if not hasattr(expression, "get_source_expressions"):
+        return False
+    return any(contains_subquery(expr) for expr in expression.get_source_expressions())
 
 
 def nest_outer_refs(value: Any) -> Any:
