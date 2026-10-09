@@ -101,6 +101,7 @@ class L(Combinable):
 
     def __init__(self, __ref: str | models.Subquery = "", /, **kwargs: Any) -> None:
         self.conditional = bool(kwargs)  # See. `django.db.models.sql.query.Query.build_filter`
+        self.inline = False  # See. `L.resolve_expression`
 
         if __ref:
             if kwargs:
@@ -190,11 +191,18 @@ class L(Combinable):
     ) -> ExpressionKind:
         """Resolve lookup expression and either return it or build a lookup expression based on it."""
         field, lookup_parts, joined_tables = self.find_lookup_property_field(query)
-        lookup_name = field.attname.removeprefix(LOOKUP_PREFIX)
-        expression = field.expression
-        for table_name in reversed(joined_tables):
-            expression = extend_expression_to_joined_table(expression, table_name)
+        model = cast("type[models.Model]", query.model)
 
+        if hasattr(self, "value") and not self.inline:
+            # A condition over a multi-valued relation should hold for some related row.
+            # Check it in a subquery, so that the main query has no duplicate rows,
+            # and so that negating the condition excludes the rows where any related row matches.
+            info = field.join_info(model, tuple(joined_tables))
+            if info.multi_valued and not info.aggregate:
+                exists = self.as_exists(model)
+                return exists.resolve_expression(query, allow_joins, reuse, summarize, for_save)  # type: ignore[no-any-return]
+
+        expression = self.property_expression(field, joined_tables)
         resolved: Any = expression.resolve_expression(query, allow_joins, reuse, summarize, for_save)  # type: ignore[union-attr]
 
         # Check whether the query should be grouped by the lookup expression.
@@ -203,6 +211,7 @@ class L(Combinable):
 
         # For sub-queries, save the resolved expression in place of the OuterRef.
         if isinstance(self.lookup, models.Subquery):
+            lookup_name = field.attname.removeprefix(LOOKUP_PREFIX)
             for child in self.lookup.query.where.children:
                 if getattr(getattr(child, "rhs", None), "name", None) == lookup_name:
                     child.rhs = resolved  # type: ignore[union-attr]
@@ -213,6 +222,28 @@ class L(Combinable):
 
         value = query.resolve_lookup_value(self.value, reuse, allow_joins, summarize)
         return query.build_lookup(lookup_parts, resolved, value)
+
+    def property_expression(self, field: LookupPropertyField, joined_tables: list[str]) -> Expr:
+        """Get the lookup property's expression, as referenced from the model at the start of the lookup."""
+        expression = field.expression
+
+        if not hasattr(self, "value") and not isinstance(self.lookup, models.Subquery):
+            # A value over a multi-valued relation would duplicate the rows of the main query.
+            info = field.join_info()
+            if info.multi_valued and not info.aggregate:
+                expression = correlated_subquery(field.model, expression)
+
+        for table_name in reversed(joined_tables):
+            expression = extend_expression_to_joined_table(expression, table_name)
+
+        return expression
+
+    def as_exists(self, model: type[models.Model]) -> models.Exists:
+        """Check the condition in a subquery correlated to the given model's primary key."""
+        condition = L(**{cast("str", self.lookup): nest_outer_refs(self.value)})
+        condition.inline = True
+        queryset = model._base_manager.filter(condition, pk=models.OuterRef("pk"))
+        return models.Exists(queryset)
 
     def find_lookup_property_field(self, query: Query) -> tuple[LookupPropertyField, list[str], list[str]]:
         """
@@ -297,6 +328,20 @@ def correlated_subquery(model: type[models.Model], expression: Expr) -> models.S
         .values(SUBQUERY_VALUE)[:1]
     )
     return models.Subquery(queryset)
+
+
+def nest_outer_refs(value: Any) -> Any:
+    """Make OuterRefs in the value point one query further out, so that they work inside a new subquery."""
+    if isinstance(value, models.OuterRef):
+        return models.OuterRef(value)
+    if isinstance(value, list | tuple):
+        return type(value)(nest_outer_refs(item) for item in value)
+    # OuterRefs inside subqueries already point to the query the value is used in.
+    if isinstance(value, models.Subquery) or not isinstance(value, BaseExpression):
+        return value
+    value = deepcopy(value)
+    value.set_source_expressions([nest_outer_refs(expr) for expr in value.get_source_expressions()])
+    return value
 
 
 def expression_has_output_field(expression: Expr) -> bool:
