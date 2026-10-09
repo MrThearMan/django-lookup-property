@@ -63,6 +63,8 @@ docs = [
 lint = [
     "prek==0.5.5",
     "ruff==0.16.10",
+    "mypy==2.4.0",
+    "django-stubs==6.1.2",
 ]
 
 [tool.uv]
@@ -77,6 +79,16 @@ django-lookup-property = { workspace = true }
 module-root = ""
 module-name = [
     "lookup_property",
+]
+
+[tool.mypy]
+plugins = [
+    "mypy_django_plugin.main",
+]
+exclude = [
+    "^tests/",
+    "^docs/",
+    "^site/",
 ]
 
 [tool.django-stubs]
