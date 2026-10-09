@@ -3,7 +3,7 @@ import re
 import pytest
 from django.db.models import F, Q
 from django.db.models.expressions import CombinedExpression, NegatedExpression
-from django.db.models.functions import Upper
+from django.db.models.functions import Trunc, Upper
 
 from example_project.example.models import Example
 from lookup_property import L, lookup_property
@@ -238,21 +238,28 @@ def test_l__no_arguments():
         L()
 
 
-def test_lookup_property__override__without_skip_codegen():
-    msg = re.escape("Override is only allowed when lookup property was initialized with `skip_codegen=True`")
-    with pytest.raises(ValueError, match=msg):
-        Example.full_name.override(lambda self: "foo")
+def test_lookup_property__skip_codegen__deprecated():
+    with pytest.deprecated_call(match="The `skip_codegen` argument is deprecated"):
+
+        @lookup_property(skip_codegen=True)
+        def foo() -> str:
+            return F("first_name")  # type: ignore[return-value]
 
 
-def test_lookup_property__contribute_to_class__no_override():
+def test_lookup_property__override__skips_codegen():
+    # Code generation would fail for this expression.
     def foo() -> str:
-        return F("first_name")
+        return Trunc("unknown", "foo")  # type: ignore[return-value]
 
-    descriptor = lookup_property(skip_codegen=True)(foo)
+    descriptor = lookup_property(foo)
 
-    msg = re.escape("Must set function for lookup property with '@foo.override'.")
-    with pytest.raises(ValueError, match=msg):
-        descriptor.contribute_to_class(Example, "foo")
+    @descriptor.override
+    def _(self: Example) -> str:
+        return "override"
+
+    descriptor.contribute_to_class(Example, "foo")
+
+    assert descriptor.func(Example()) == "override"
 
 
 def test_random_arg_name():

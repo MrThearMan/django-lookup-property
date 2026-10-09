@@ -100,7 +100,7 @@ class Example(models.Model):
     def forward_many_to_one() -> int:
         return models.F("other__pk")  # type: ignore[return-value]
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def reverse_one_to_many() -> int | None:
         return models.F("totals__pk")  # type: ignore[return-value]
 
@@ -108,7 +108,7 @@ class Example(models.Model):
     def _(self) -> int | None:
         return self.totals.values_list("pk", flat=True).first()
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def forward_many_to_many() -> int | None:
         return models.F("children__pk")  # type: ignore[return-value]
 
@@ -116,7 +116,7 @@ class Example(models.Model):
     def _(self) -> int | None:
         return self.children.values_list("pk", flat=True).first()
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def reverse_many_to_many() -> int | None:
         return models.F("parts__pk")  # type: ignore[return-value]
 
@@ -343,7 +343,7 @@ class Example(models.Model):
             output_field=models.CharField(),
         )
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def case_5() -> str:
         return models.Case(  # type: ignore[return-value]
             models.When(
@@ -358,7 +358,7 @@ class Example(models.Model):
     def _(self) -> str:
         return "foo" if self.totals.filter(number=1).exists() else "bar"
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def case_6() -> str:
         return models.Case(  # type: ignore[return-value]
             models.When(
@@ -373,7 +373,7 @@ class Example(models.Model):
     def _(self) -> str:
         return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def case_7() -> str:
         return models.Case(  # type: ignore[return-value]
             models.When(
@@ -388,7 +388,7 @@ class Example(models.Model):
     def _(self) -> str:
         return "foo" if self.parts.filter(number=1, far__number=1).exists() else "bar"
 
-    @lookup_property(skip_codegen=True, concrete=True)
+    @lookup_property(concrete=True)
     def case_8() -> str:
         return models.Case(  # type: ignore[return-value]
             models.When(
@@ -425,7 +425,7 @@ class Example(models.Model):
             output_field=models.CharField(),
         )
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def reffed_by_another_lookup() -> int | None:
         return models.F("parts__far__number")  # type: ignore[return-value]
 
@@ -444,7 +444,7 @@ class Example(models.Model):
             output_field=models.CharField(),
         )
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def subquery_at_least_age() -> bool:
         return models.Case(  # type: ignore[return-value]
             models.When(
@@ -460,7 +460,7 @@ class Example(models.Model):
         number = Thing.objects.filter(example=self).values_list("number", flat=True).first()
         return number is not None and self.age is not None and number >= self.age
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def has_thing_in_range() -> bool:
         return models.Exists(  # type: ignore[return-value]
             Thing.objects.alias(in_range=L("number_in_range")).filter(example=models.OuterRef("pk"), in_range=True),
@@ -808,7 +808,7 @@ class Example(models.Model):
     def count_rel_filter() -> int:
         return aggregates.Count("totals", filter=models.Q(totals__name__contains="bar"))  # type: ignore[return-value]
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def count_rel_many_to_one() -> int:
         # `aggregates.Count("totals__aliens")` does not work correctly together with filtering.
         # See: `tests.test_filtering.test_filter_by_lookup_property__count_rel_many_to_one`
@@ -818,7 +818,7 @@ class Example(models.Model):
     def _(self) -> int:
         return self.totals.aggregate(_count=models.Count("aliens"))["_count"]
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def count_rel_many_to_many() -> int:
         # `aggregates.Count("parts__aliens")` does not work correctly together with filtering
         # See: `tests.test_filtering.test_filter_by_lookup_property__count_rel_many_to_many`
@@ -868,7 +868,7 @@ class Example(models.Model):
     def variance() -> float:
         return aggregates.Variance("number")  # type: ignore[return-value]
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def subquery() -> int | None:
         return models.Subquery(Thing.objects.filter(example=models.OuterRef("pk")).values("number")[:1])  # type: ignore[return-value]
 
@@ -876,7 +876,7 @@ class Example(models.Model):
     def _(self) -> int | None:
         return self.thing.number
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def exists() -> bool:
         return models.Exists(Total.objects.filter(example=models.OuterRef("pk"), number=1))  # type: ignore[return-value]
 
@@ -909,7 +909,7 @@ class Thing(models.Model):
     def number_in_range() -> bool:
         return models.Q(number__gt=10)  # type: ignore[return-value]
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def example_not_case_6_foo() -> bool:
         return models.Case(  # type: ignore[return-value]
             models.When(

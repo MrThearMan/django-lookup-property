@@ -97,7 +97,7 @@ class Student(models.Model):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
 
-    @lookup_property(skip_codegen=True)
+    @lookup_property
     def full_name():
         return ...
 
@@ -109,10 +109,9 @@ class Student(models.Model):
 > By doing this, you'll be trading reduced code duplication for correctness and performance,
 > and you'll need start keeping the expression in sync with the property manually.
 
-The use of the `skip_codegen` argument is required when using overrides. Otherwise, the
-lookup expression would try to convert the expression the python code, only to be overridden.
-We need to explicitly tell this to the lookup property, because the conversion happens immediately
-at class creation time, and the override is only added to the class after it.
+Code generation is skipped for properties with an override.
+
+> The `skip_codegen` argument of earlier versions is deprecated and does nothing.
 
 ## Related models
 

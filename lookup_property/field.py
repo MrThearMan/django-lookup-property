@@ -34,6 +34,10 @@ __all__ = [
 class LookupPropertyDescriptor[R]:
     """Descriptor for accessing a LookupPropertyField on the model."""
 
+    # Set by `override` or `generate_func`
+    func: Callable[[Any], R]
+    module: ast.Module
+
     def __init__(self, func: FunctionType, /, **kwargs: Unpack[StateArgs]) -> None:
         # Set in `LookupPropertyField`
         self.field: LookupPropertyField = None  # type: ignore[assignment]
@@ -42,20 +46,7 @@ class LookupPropertyDescriptor[R]:
 
         self.__name__ = func.__name__
         self._expression: Callable[[], Expr] = func
-        if self.state.skip_codegen:
-            return
-
-        self.module = query_expression_ast_module(
-            expression=self.expression,
-            function_name=func.__code__.co_name,
-            state=self.state,
-        )
-        self.func: Callable[[Any], R] = ast_module_to_function(
-            module=self.module,
-            function_name=func.__code__.co_name,
-            filename=func.__code__.co_filename,
-            state=self.state,
-        )
+        self._code = func.__code__
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.expression})"
@@ -81,12 +72,22 @@ class LookupPropertyDescriptor[R]:
 
     def override(self, func: Callable[[Any], R]) -> None:
         """Override generated function with a custom one."""
-        if not self.state.skip_codegen:
-            msg = "Override is only allowed when lookup property was initialized with `skip_codegen=True`"
-            raise ValueError(msg)
-
         self.func = func
         self.module = ast.parse(inspect.cleandoc(inspect.getsource(func)))
+
+    def generate_func(self) -> None:
+        """Generate the python function from the decorated function return expression."""
+        self.module = query_expression_ast_module(
+            expression=self.expression,
+            function_name=self._code.co_name,
+            state=self.state,
+        )
+        self.func = ast_module_to_function(
+            module=self.module,
+            function_name=self._code.co_name,
+            filename=self._code.co_filename,
+            state=self.state,
+        )
 
     def contribute_to_class(
         self,
@@ -94,9 +95,9 @@ class LookupPropertyDescriptor[R]:
         name: str,
         private_only: bool = False,  # noqa: FBT001, FBT002
     ) -> None:
+        # Overrides are set in the class body, which runs before this is called.
         if not hasattr(self, "func"):
-            msg = f"Must set function for lookup property with '@{self.__name__}.override'."
-            raise ValueError(msg)
+            self.generate_func()
 
         # Called by `django.db.models.base.ModelBase.add_to_class`
         field = LookupPropertyField(cls, target_property=self)

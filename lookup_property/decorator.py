@@ -21,6 +21,7 @@ def lookup_property[R](__func: Callable[[], R], /) -> LookupPropertyDescriptor[R
 def lookup_property[R](
     *,
     joins: list[str] | None = None,
+    skip_codegen: bool | None = None,
     **kwargs: Unpack[StateArgs],
 ) -> Callable[[Callable[[], R]], LookupPropertyDescriptor[R]]: ...
 
@@ -30,11 +31,16 @@ def lookup_property[R](
     /,
     *,
     joins: list[str] | None = None,
+    skip_codegen: bool | None = None,
     **kwargs: Unpack[StateArgs],
 ) -> LookupPropertyDescriptor[R] | Callable[[Callable[[], R]], LookupPropertyDescriptor[R]]:
     """Decorator for converting a class method to a LookupPropertyField"""
     if joins is not None:
         msg = "The `joins` argument is deprecated and does nothing. Joins are now added automatically."
+        warnings.warn(msg, DeprecationWarning, stacklevel=2)
+
+    if skip_codegen is not None:
+        msg = "The `skip_codegen` argument is deprecated and does nothing. Overrides skip codegen automatically."
         warnings.warn(msg, DeprecationWarning, stacklevel=2)
 
     if __func is not None:

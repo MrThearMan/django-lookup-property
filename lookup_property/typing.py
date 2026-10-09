@@ -76,7 +76,6 @@ class RandomKeyDict(dict[str, Any]):
 @dataclass
 class State:
     use_tz: bool = field(default_factory=lambda: settings.USE_TZ)
-    skip_codegen: bool = False
     concrete: bool = False
     hidden: bool = True
 
@@ -85,7 +84,6 @@ class State:
 
 
 class StateArgs(TypedDict, total=False):
-    skip_codegen: bool
     use_tz: bool
     concrete: bool
     hidden: bool
