@@ -116,6 +116,12 @@ def test_joins__filter__outer_ref_value__in_list(data):
     assert list(qs) == [data["tot_a"], data["tot_b"]]
 
 
+def test_joins__filter__outer_ref_value__in_expression(data):
+    sq = Example.objects.filter(L(reverse_one_to_many=OuterRef("pk") + Value(0)), first_name="e1")
+    qs = Total.objects.filter(Exists(sq)).order_by("pk")
+    assert list(qs) == [data["tot_a"], data["tot_b"]]
+
+
 def test_joins__filter__aggregate(data):
     assert names(Example.objects.filter(L(count_rel=2))) == ["e1"]
     assert names(Example.objects.exclude(L(count_rel=2))) == ["e2", "e3"]
@@ -351,8 +357,7 @@ def test_joins__pattern__order_by_through_relation(pattern_data):
 def test_joins__pattern__alias_case_with_lookups_through_relations(pattern_data):
     # e.g. `qs.distinct().alias(state=Case(When(~L(rel__prop__contains=[...])), ...)).filter(state__in=[...])`
     qs = (
-        Thing.objects
-        .distinct()
+        Thing.objects.distinct()
         .alias(
             state=Case(
                 When(~L(example__case_6="foo"), then=Value("not foo")),

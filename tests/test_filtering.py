@@ -1,5 +1,5 @@
 import pytest
-from django.db import models
+from django.db import connection, models
 from django.db.models.functions import Lower, Upper
 
 from example_project.example.models import Example, Far, Other, Part, Thing, Total
@@ -389,3 +389,14 @@ def test_filter_by_lookup_property__annotations_with_same_name_from_other_models
     # Filtering with a different lookup property from a different model
     # with the same name should also work, and should use the correct property.
     assert qs.filter(L(other__number_in_range=True)).count() == 1
+
+
+def test_lookup_property_in_check_constraint():
+    # Check constraints are compiled without table aliases.
+    constraint = models.CheckConstraint(condition=models.Q(_lookup_property_full_name="foo bar"), name="full_name")
+    sql = constraint.constraint_sql(Example, connection.schema_editor())
+    assert str(sql) == (
+        'CONSTRAINT "full_name" CHECK ('
+        """(COALESCE("first_name", '') || COALESCE((COALESCE(' ', '') || COALESCE("last_name", '')), ''))"""
+        " = 'foo bar')"
+    )
