@@ -79,6 +79,7 @@ class ExampleFactory(DjangoModelFactory):
 
     class Meta:
         model = Example
+        skip_postgeneration_save = True
 
     @classmethod
     def create(cls, **kwargs: Any) -> Example:
@@ -115,6 +116,7 @@ class FarFactory(DjangoModelFactory):
 
     class Meta:
         model = Far
+        skip_postgeneration_save = True
 
     @classmethod
     def create(cls, **kwargs: Any) -> Far:
@@ -139,6 +141,7 @@ class AlienFactory(DjangoModelFactory):
 
     class Meta:
         model = Alien
+        skip_postgeneration_save = True
 
     @classmethod
     def create(cls, **kwargs: Any) -> Alien:
@@ -175,6 +178,7 @@ class ThingFactory(DjangoModelFactory):
 
     class Meta:
         model = Thing
+        skip_postgeneration_save = True
 
     @classmethod
     def create(cls, **kwargs: Any) -> Thing:
@@ -212,6 +216,7 @@ class PartFactory(DjangoModelFactory):
 
     class Meta:
         model = Part
+        skip_postgeneration_save = True
 
     @classmethod
     def create(cls, **kwargs: Any) -> Part:
