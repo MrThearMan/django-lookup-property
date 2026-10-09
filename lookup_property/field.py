@@ -152,12 +152,6 @@ class LookupPropertyField(models.Field):
         # Register property on a concrete implementation of an abstract model
         self.target_property.contribute_to_class(cls, name, private_only=private_only)
 
-    def get_default(self) -> Any:
-        # Default value that makes sure `lookup_property.__get__`
-        # does not consider the field as set right after initialization.
-        # Called by `Model.__init__`.
-        return Sentinel
-
 
 class LazyPathInfo:
     """
