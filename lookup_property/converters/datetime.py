@@ -10,7 +10,7 @@ from lookup_property.typing import State
 from .expressions import expression_to_ast
 from .utils import ast_attribute, ast_function
 
-_LOOKUP_NAME_TO_TRUNC: dict[str, type[TruncBase]] = {
+_LOOKUP_NAME_TO_TRUNC: dict[str | None, type[TruncBase]] = {
     "year": functions.TruncYear,
     "quarter": functions.TruncQuarter,
     "month": functions.TruncMonth,
@@ -22,7 +22,7 @@ _LOOKUP_NAME_TO_TRUNC: dict[str, type[TruncBase]] = {
     "minute": functions.TruncMinute,
     "second": functions.TruncSecond,
 }
-_LOOKUP_NAME_TO_EXTRACT: dict[str, type[functions.Extract]] = {
+_LOOKUP_NAME_TO_EXTRACT: dict[str | None, type[functions.Extract]] = {
     "year": functions.ExtractYear,
     "quarter": functions.ExtractQuarter,
     "month": functions.ExtractMonth,
@@ -53,7 +53,7 @@ def _(expression: functions.Now, state: State) -> ast.Call:
 
 
 @expression_to_ast.register
-def _(expression: functions.Trunc, state: State) -> ast.AST:
+def _(expression: functions.Trunc, state: State) -> ast.expr:
     trunc = _LOOKUP_NAME_TO_TRUNC.get(expression.kind)
     if trunc is None:
         msg = f"No implementation for trunc expression '{expression.kind}'."
@@ -63,7 +63,7 @@ def _(expression: functions.Trunc, state: State) -> ast.AST:
 
 
 @expression_to_ast.register
-def _(expression: functions.Extract, state: State) -> ast.AST:
+def _(expression: functions.Extract, state: State) -> ast.expr:
     extract = _LOOKUP_NAME_TO_EXTRACT.get(expression.lookup_name)
     if extract is None:
         msg = f"No implementation for extract expression '{expression.lookup_name}'."

@@ -21,7 +21,7 @@ def _(expression: models.Case, state: State) -> ast.IfExp:
     return cases_to_if_expression(cases, default, state=state)
 
 
-def cases_to_if_expression(cases: list[models.When], default: ast.AST, state: State) -> ast.IfExp:
+def cases_to_if_expression(cases: list[models.When], default: ast.expr, state: State) -> ast.IfExp:
     """Recursively convert the When expressions of a Case expression to an if expression."""
     case = cases.pop(0)
     statement = cases_to_if_expression(cases, default, state=state) if cases else default

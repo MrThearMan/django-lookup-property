@@ -3,7 +3,7 @@ from __future__ import annotations
 import ast
 import inspect
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Unpack
+from typing import TYPE_CHECKING, Any, Self, Unpack, cast, overload
 
 from django.db import models
 from django.db.models import ForeignObjectRel
@@ -47,7 +47,7 @@ class LookupPropertyDescriptor[R]:
             function_name=func.__code__.co_name,
             state=self.state,
         )
-        self.func = ast_module_to_function(
+        self.func: Callable[[Any], R] = ast_module_to_function(
             module=self.module,
             function_name=func.__code__.co_name,
             filename=func.__code__.co_filename,
@@ -57,12 +57,18 @@ class LookupPropertyDescriptor[R]:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.expression})"
 
-    def __get__(self, instance: models.Model | None, model: type[models.Model] | None) -> R:
+    @overload
+    def __get__(self, instance: None, model: type[models.Model] | None) -> Self: ...
+
+    @overload
+    def __get__(self, instance: models.Model, model: type[models.Model] | None) -> R: ...
+
+    def __get__(self, instance: models.Model | None, model: type[models.Model] | None) -> Self | R:
         if instance is None:  # if called on class
             return self
         cached_value = getattr(instance, self.field.attname, Sentinel)
         if cached_value is not Sentinel:
-            return cached_value
+            return cast("R", cached_value)
         return self.func(instance)
 
     def __set__(self, instance: models.Model, value: Any) -> None:
@@ -70,7 +76,7 @@ class LookupPropertyDescriptor[R]:
         # This does allow overriding the value manually, but that is not recommended.
         setattr(instance, self.field.attname, value)
 
-    def override(self, func: FunctionType) -> None:
+    def override(self, func: Callable[[Any], R]) -> None:
         """Override generated function with a custom one."""
         if not self.state.skip_codegen:  # pragma: no cover
             msg = "Override is only allowed when lookup property was initialized with `skip_codegen=True`"
@@ -95,7 +101,7 @@ class LookupPropertyDescriptor[R]:
         field.name = field.attname = f"{LOOKUP_PREFIX}{name}"  # Enable using aliases with the same name as the field
         field.concrete = self.state.concrete  # if False -> Don't include field in `SELECT` statements
         field.hidden = self.state.hidden  # If True -> Don't include field in `model._meta.get_fields()`
-        field.generated = True  # Don't validate field when `model.clean_fields()` is called
+        field.generated = True  # type: ignore[misc]  # Don't validate field when `model.clean_fields()` is called
         cls._meta.add_field(field, private=True)
         setattr(cls, name, self)
 

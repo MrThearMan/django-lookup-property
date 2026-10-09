@@ -10,7 +10,7 @@ ROOT_URLCONF = "example_project.project.urls"
 WSGI_APPLICATION = "tests.project.wsgi.application"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list[str] = []
 
 INSTALLED_APPS = [
     "django.contrib.admin",

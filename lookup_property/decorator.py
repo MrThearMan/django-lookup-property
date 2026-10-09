@@ -29,7 +29,7 @@ def lookup_property[R](
     if __func is not None:
         return LookupPropertyDescriptor(__func)  # type: ignore[arg-type]
 
-    def wrapper(__fn: Callable[[], R], /) -> R:
+    def wrapper(__fn: Callable[[], R], /) -> LookupPropertyDescriptor[R]:
         return LookupPropertyDescriptor(__fn, **kwargs)  # type: ignore[arg-type]
 
     return wrapper

@@ -10,7 +10,7 @@ __all__ = [
 
 
 class RegisterFunc[**P, T, Str: str](Protocol):
-    def __call__(self, *, lookup: Str) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    def __call__(self, *, lookup: Str | None) -> Callable[[Callable[P, T]], Callable[P, T]]:
         pass
 
 
@@ -22,9 +22,9 @@ class Dispatch[**P, T, Str: str](Protocol):
 
 
 def lookup_singledispatch[Str: str, **P, T](func: Callable[Concatenate[Str, P], T]) -> Dispatch[P, T, Str]:
-    registry: dict[str, Callable[P, T]] = {}
+    registry: dict[str | None, Callable[P, T]] = {}
 
-    def register(*, lookup: Str) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    def register(*, lookup: Str | None) -> Callable[[Callable[P, T]], Callable[P, T]]:
         def decorator(impl_func: Callable[P, T]) -> Callable[P, T]:
             registry[lookup] = impl_func
             return impl_func
@@ -40,6 +40,6 @@ def lookup_singledispatch[Str: str, **P, T](func: Callable[Concatenate[Str, P], 
 
         return impl(*args, **kwargs)
 
-    wrapper = cast("Dispatch[P, T, Str]", wrapper)
-    wrapper.register = register
-    return wrapper
+    dispatch = cast("Dispatch[P, T, Str]", wrapper)
+    dispatch.register = register
+    return dispatch

@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 
-def ast_function(func_name: str, attrs: Iterable[str] = (), *args: ast.AST, **kwargs: ast.AST) -> ast.Call:
+def ast_function(func_name: str, attrs: Iterable[str] = (), *args: ast.expr, **kwargs: ast.expr) -> ast.Call:
     """
     Transform given attributes and function name to a function call ast node.
 
@@ -36,16 +36,14 @@ def ast_attribute(*attrs: str) -> ast.Attribute:
     ["self", "bar"] -> self.bar
     ["foo", "foo", "bar"] -> foo.foo.bar
     """
-    value: ast.Name | ast.Attribute | None = None
-    for i, name in enumerate(attrs):
-        if i == 0:
-            value = ast.Name(id=name, ctx=ast.Load())
-            continue
+    first, *rest = attrs
+    value: ast.Name | ast.Attribute = ast.Name(id=first, ctx=ast.Load())
+    for name in rest:
         value = ast.Attribute(value=value, attr=name, ctx=ast.Load())
     return value  # type: ignore[return-value]
 
 
-def ast_method(func_name: str, attrs: Iterable[str] = (), *args: ast.AST, **kwargs: ast.AST) -> ast.Call:
+def ast_method(func_name: str, attrs: Iterable[str] = (), *args: ast.expr, **kwargs: ast.expr) -> ast.Call:
     """
     Transform given attributes and function name to a class instance method ast node.
 

@@ -59,27 +59,27 @@ class Example(models.Model):
 
     @lookup_property
     def combined_expression_add() -> int:
-        return models.F("age") + 2
+        return models.F("age") + 2  # type: ignore[return-value]
 
     @lookup_property
     def combined_expression_div() -> int:
-        return models.F("age") / 2
+        return models.F("age") / 2  # type: ignore[return-value]
 
     @lookup_property
     def combined_expression_mod() -> int:
-        return models.F("age") % 2
+        return models.F("age") % 2  # type: ignore[return-value]
 
     @lookup_property
     def combined_expression_mult() -> int:
-        return models.F("age") * 2
+        return models.F("age") * 2  # type: ignore[return-value]
 
     @lookup_property
     def combined_expression_pow() -> int:
-        return models.F("age") ** 2
+        return models.F("age") ** 2  # type: ignore[return-value]
 
     @lookup_property
     def combined_expression_sub() -> int:
-        return models.F("age") - 2
+        return models.F("age") - 2  # type: ignore[return-value]
 
     @lookup_property
     def expression_wrapper() -> str:
@@ -426,11 +426,11 @@ class Example(models.Model):
         )
 
     @lookup_property(skip_codegen=True)
-    def reffed_by_another_lookup() -> str:
+    def reffed_by_another_lookup() -> int | None:
         return models.F("parts__far__number")  # type: ignore[return-value]
 
     @reffed_by_another_lookup.override
-    def _(self) -> str:
+    def _(self) -> int | None:
         return self.parts.values_list("far__number", flat=True).first()
 
     @lookup_property
@@ -843,11 +843,11 @@ class Example(models.Model):
         return aggregates.Variance("number")  # type: ignore[return-value]
 
     @lookup_property(skip_codegen=True)
-    def subquery() -> int:
+    def subquery() -> int | None:
         return models.Subquery(Thing.objects.filter(example=models.OuterRef("pk")).values("number")[:1])  # type: ignore[return-value]
 
     @subquery.override
-    def _(self) -> int:
+    def _(self) -> int | None:
         return self.thing.number
 
     @lookup_property(skip_codegen=True)
@@ -869,7 +869,7 @@ class Alien(models.Model):
     name = models.CharField(max_length=256)
     number = models.IntegerField(null=True)
     total = models.ForeignKey("Total", on_delete=models.CASCADE, related_name="aliens")
-    parts = models.ManyToManyField("Part", related_name="aliens")
+    parts: "models.ManyToManyField[Part, Any]" = models.ManyToManyField("Part", related_name="aliens")
 
 
 class Thing(models.Model):

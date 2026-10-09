@@ -3,9 +3,15 @@ from __future__ import annotations
 import ast
 import itertools
 from functools import partial, wraps
+from typing import TYPE_CHECKING
 
 from lookup_property import expression_to_ast
-from lookup_property.typing import Expr, ModelMethod, State
+from lookup_property.typing import Expr, State
+
+if TYPE_CHECKING:
+    from django.db import models
+
+    from lookup_property.typing import Any, Callable
 
 __all__ = [
     "ast_module_to_function",
@@ -19,10 +25,8 @@ def query_expression_ast_module(expression: Expr, function_name: str, state: Sta
     return ast_to_module(function_name=function_name, return_value=return_value, state=state)
 
 
-def ast_to_module(function_name: str, return_value: ast.AST, state: State) -> ast.Module:
-    function_body: list[ast.Import | ast.Return] = [
-        ast.Import(names=[ast.alias(name=import_name)]) for import_name in state.imports
-    ]
+def ast_to_module(function_name: str, return_value: ast.expr, state: State) -> ast.Module:
+    function_body: list[ast.stmt] = [ast.Import(names=[ast.alias(name=import_name)]) for import_name in state.imports]
     function_body.append(ast.Return(value=return_value))
 
     module = ast.Module(
@@ -51,9 +55,11 @@ def ast_to_module(function_name: str, return_value: ast.AST, state: State) -> as
     return module
 
 
-def ast_module_to_function(module: ast.Module, function_name: str, filename: str, state: State) -> ModelMethod:
+def ast_module_to_function(
+    module: ast.Module, function_name: str, filename: str, state: State
+) -> Callable[[models.Model], Any]:
     compiled = compile(source=module, filename=filename, mode="exec")
-    namespace: dict[str, ModelMethod] = {}
+    namespace: dict[str, Callable[[models.Model], Any]] = {}
     eval(compiled, namespace)  # noqa: S307
     func = namespace[function_name]
     if state.extra_kwargs:

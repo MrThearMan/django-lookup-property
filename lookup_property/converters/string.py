@@ -10,7 +10,7 @@ from .expressions import expression_to_ast
 
 
 @expression_to_ast.register
-def _(expression: functions.Concat, state: State) -> ast.AST:
+def _(expression: functions.Concat, state: State) -> ast.expr:
     """
     Used together with the ConcatPair-converter below to concatenate values in pairs:
     Concat(F("foo"), Value(" "), F("bar")) -> self.foo + ("" + self.bar)

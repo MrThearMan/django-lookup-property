@@ -17,7 +17,7 @@ __all__ = [
 
 
 @singledispatch
-def expression_to_ast(expression: object, state: State) -> ast.AST:
+def expression_to_ast(expression: object, state: State) -> ast.expr:
     """
     Default converter for all objects, which works by setting a new keyword argument:
 
@@ -70,7 +70,7 @@ def _(expression: dict, state: State) -> ast.Dict:
 
 
 @expression_to_ast.register
-def _(expression: models.Value, state: State) -> ast.AST:
+def _(expression: models.Value, state: State) -> ast.expr:
     """Value("foo") -> "foo"""
     return expression_to_ast(expression.value, state)
 
@@ -81,7 +81,7 @@ def _(expression: models.F, state: State) -> ast.Attribute:
     F("foo") -> self.foo
     F("foo__bar") -> self.foo.bar
     """
-    return ast_property(*expression.name.split(LOOKUP_SEP))
+    return ast_property(*expression.name.split(LOOKUP_SEP))  # type: ignore[attr-defined]
 
 
 _BIN_OP_MAP: dict[str, ast.operator] = {

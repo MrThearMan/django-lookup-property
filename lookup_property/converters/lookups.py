@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import ast
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.db import models
 from django.db.models import lookups
@@ -14,33 +14,37 @@ from lookup_property.typing import State
 from .expressions import expression_to_ast
 from .utils import ast_method, ast_property
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 __all__ = [
     "lookup_to_ast",
 ]
 
 
 @expression_to_ast.register
-def _(expression: L, state: State) -> ast.AST:  # pragma: no cover
+def _(expression: L, state: State) -> ast.expr:  # pragma: no cover
     """
     L("foo") -> self.foo
     L(foo="bar") -> self.foo == "bar"
     L(foo__endswith="bar") -> self.foo.endswith("bar")
     """
+    lookup: str = expression.lookup  # type: ignore[assignment]
     if not hasattr(expression, "value"):
-        return ast_property(*expression.lookup.split(LOOKUP_SEP))
+        return ast_property(*lookup.split(LOOKUP_SEP))
 
-    return to_lookup_comparison(attr=expression.lookup, value=expression.value, state=state)
+    return to_lookup_comparison(attr=lookup, value=expression.value, state=state)
 
 
 @expression_to_ast.register
-def _(expression: models.Q, state: State) -> ast.Name | ast.BoolOp | ast.UnaryOp | ast.AST:
+def _(expression: models.Q, state: State) -> ast.Name | ast.BoolOp | ast.UnaryOp | ast.expr:
     """
     Convert Q-Nodes to boolean comparisons, examples:
     Q(foo=1) -> self.foo == 1
     Q(foo__in=[1, 2]) -> self.foo in [1, 2]
     """
     children: list[tuple[str, Any]] = expression.children  # type: ignore[assignment]
-    comparison: ast.Name | ast.BoolOp | ast.AST
+    comparison: ast.Name | ast.BoolOp | ast.expr
 
     if not children:
         comparison = ast.Constant(value=True)
@@ -60,7 +64,7 @@ def _(expression: models.Q, state: State) -> ast.Name | ast.BoolOp | ast.UnaryOp
     return comparison
 
 
-def and_or_comparison(children: list[tuple[str, Any] | models.Q], expression: models.Q, state: State) -> ast.BoolOp:
+def and_or_comparison(children: Sequence[tuple[str, Any] | models.Q], expression: models.Q, state: State) -> ast.BoolOp:
     """
     Q(foo=1) | Q(bar=2) -> self.foo == 1 or self.bar == 2
     Q(foo=1) & Q(bar=2) -> self.foo == 1 and self.bar == 2
@@ -89,7 +93,7 @@ def xor_comparison(children: list[tuple[str, Any]], state: State) -> ast.BinOp:
     )
 
 
-def to_lookup_comparison(attr: str, value: Any, state: State) -> ast.AST:
+def to_lookup_comparison(attr: str, value: Any, state: State) -> ast.expr:
     """
     Q(foo=1) -> self.foo == 1
     Q(foo__isnull=true) -> self.foo is None
@@ -102,7 +106,7 @@ def to_lookup_comparison(attr: str, value: Any, state: State) -> ast.AST:
 
 
 @lookup_singledispatch
-def lookup_to_ast(lookup: str, attrs: list[str], value: Any, state: State) -> ast.Compare:
+def lookup_to_ast(lookup: str, attrs: list[str], value: Any, state: State) -> ast.expr:
     """Default behavior. Q(foo__bar=1) -> self.foo.bar == 1"""
     return ast.Compare(
         left=ast_property(*attrs, lookup),
@@ -125,7 +129,7 @@ def _(attrs: list[str], value: Any, state: State) -> ast.Compare:
 
 
 @lookup_to_ast.register(lookup=lookups.IExact.lookup_name)
-def _(attrs: list[str], value: str | None, state: State) -> ast.AST | ast.Compare:
+def _(attrs: list[str], value: str | None, state: State) -> ast.expr | ast.Compare:
     """Q(foo__iexact="bar") -> self.foo.casefold() == "bar".casefold()"""
     if value is None:
         return lookup_to_ast("exact", attrs, value, state)
