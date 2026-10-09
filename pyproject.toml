@@ -23,18 +23,17 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "Framework :: Django :: 5.0",
-    "Framework :: Django :: 5.1",
+    "Programming Language :: Python :: 3.15",
     "Framework :: Django :: 5.2",
     "Framework :: Django :: 6.0",
+    "Framework :: Django :: 6.1",
 ]
-requires-python = ">=3.11,<4"
-dynamic = [
-    "dependencies",
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.2.17",
 ]
 
 [project.urls]
@@ -43,30 +42,41 @@ dynamic = [
 "Bug Tracker" = "https://github.com/MrThearMan/django-lookup-property/issues"
 "Documentation" = "https://mrthearman.github.io/django-lookup-property"
 
-[tool.poetry]
-requires-poetry = ">=2.0.0"
-packages = [
-    { include = "lookup_property" },
+[dependency-groups]
+# Development installs the library itself, so that "uv run" needs no extra flags.
+dev = [
+    "django-lookup-property",
+]
+test = [
+    "pytest==9.1.1",
+    "pytest-django==4.14.0",
+    "coverage==7.16.2",
+    "freezegun==1.5.5",
+    "nox==2026.8.17",
+    "factory-boy==3.3.3",
+]
+docs = [
+    "mkdocs==1.6.1",
+    "pymdown-extensions==12.1",
+    "mkdocs-mermaid2-plugin==1.2.3",
+]
+lint = [
+    "pre-commit==4.6.2",
 ]
 
-[tool.poetry.dependencies]
-Django = ">=5.2.17"
+[tool.uv]
+default-groups = "all"
 
-[tool.poetry.group.test.dependencies]
-pytest = "9.1.1"
-pytest-django = "4.14.0"
-coverage = "7.16.2"
-freezegun = "1.5.5"
-nox = "2026.8.17"
-factory-boy = "3.3.3"
+[tool.uv.sources]
+# Lets the "dev" group name this project.
+django-lookup-property = { workspace = true }
 
-[tool.poetry.group.docs.dependencies]
-mkdocs = "1.6.1"
-pymdown-extensions = "12.1"
-mkdocs-mermaid2-plugin = "1.2.3"
-
-[tool.poetry.group.lint.dependencies]
-pre-commit = "4.6.2"
+[tool.uv.build-backend]
+# The package is at the repository root, not under "src".
+module-root = ""
+module-name = [
+    "lookup_property",
+]
 
 [tool.django-stubs]
 django_settings_module = "example_project.project.settings"
@@ -95,5 +105,5 @@ DJANGO_SETTINGS_MODULE = "example_project.project.settings"
 addopts = "--disable-warnings"
 
 [build-system]
-requires = ["poetry-core>=2.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.12.24,<0.13.0"]
+build-backend = "uv_build"
