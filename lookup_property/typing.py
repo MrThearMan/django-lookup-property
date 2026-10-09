@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "LOOKUP_PREFIX",
+    "SUBQUERY_VALUE",
     "Any",
     "Callable",
     "Collection",
@@ -39,6 +40,7 @@ __all__ = [
 type Expr = BaseExpression | Combinable | models.Q
 
 LOOKUP_PREFIX = "_lookup_property_"
+SUBQUERY_VALUE = "_lookup_property_value_"
 
 
 class ExpressionKind(Protocol):

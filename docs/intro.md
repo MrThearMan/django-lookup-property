@@ -142,6 +142,7 @@ class Class(models.Model):
 
 Lookup properties are not included in select statements by default. This is because
 the properties can contain joins, which we might not want to do for every query.
+Concrete properties that reference related models are selected using subqueries.
 
 If you do want this behavior, you can use the `concrete` argument to always
 "annotate" the lookup property on the model when it is fetched from the database:

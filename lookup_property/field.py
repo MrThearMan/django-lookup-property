@@ -6,10 +6,16 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, Self, Unpack, cast, overload
 
 from django.db import models
-from django.db.models import ForeignObjectRel
+from django.db.models import ForeignObjectRel, sql
 
 from .converters.main import ast_module_to_function, query_expression_ast_module
-from .expressions import LookupPropertyCol
+from .expressions import (
+    JoinInfo,
+    LookupPropertyCol,
+    analyze_joins,
+    correlated_subquery,
+    extend_expression_to_joined_table,
+)
 from .typing import LOOKUP_PREFIX, Sentinel, State, StateArgs
 
 if TYPE_CHECKING:
@@ -121,6 +127,7 @@ class LookupPropertyField(models.Field):
         self.target_property = target_property
         if target_property.state.joins:
             self.path_infos = LazyPathInfo(self, joins=target_property.state.joins)
+        self.join_infos: dict[tuple[type[models.Model], tuple[str, ...]], JoinInfo] = {}
 
         super().__init__()
         target_property.field = self
@@ -134,14 +141,51 @@ class LookupPropertyField(models.Field):
 
     def get_col(  # type: ignore[override]
         self,
-        alias: str,
+        alias: str | None,
         output_field: models.Field | None = None,
     ) -> LookupPropertyCol:
-        return self.cached_col
+        return LookupPropertyCol(target_field=self, alias=alias)
 
     @cached_property
     def cached_col(self) -> LookupPropertyCol:  # type: ignore[override]
-        return LookupPropertyCol(target_field=self)
+        return self.get_col(self.model._meta.db_table)
+
+    def join_info(self, model: type[models.Model] | None = None, joined_tables: tuple[str, ...] = ()) -> JoinInfo:
+        """
+        Find out which joins the expression needs when it is referenced from the given model
+        through the given relations. Defaults to the model the lookup property is defined on.
+        """
+        key = (model or self.model, joined_tables)
+        info = self.join_infos.get(key)
+        if info is None:
+            expression = self.expression
+            for table_name in reversed(joined_tables):
+                expression = extend_expression_to_joined_table(expression, table_name)
+            info = self.join_infos[key] = analyze_joins(key[0], expression)
+        return info
+
+    def resolve_for_alias(self, alias: str | None, outer_query: sql.Query) -> Expr:
+        """
+        Resolve the expression for the row of the given table alias in the outer query.
+
+        The outer query is already being compiled at this point, so joins can no longer be added to it.
+        Expressions that need joins or aggregation are evaluated in a correlated subquery instead.
+        """
+        info = self.join_info()
+        expression = self.expression
+        if info.joins or info.aggregate:
+            expression = correlated_subquery(self.model, expression)
+
+        query = sql.Query(self.model, alias_cols=alias is not None)
+        # Use the same alias naming as the outer query so that subquery aliases don't clash with it.
+        query.alias_prefix = outer_query.alias_prefix
+        query.subq_aliases = outer_query.subq_aliases
+        if alias is not None:
+            query.alias_map[alias] = query.base_table_class(self.model._meta.db_table, alias)
+            query.alias_refcount[alias] = 1
+            query.table_map[self.model._meta.db_table] = [alias]
+
+        return expression.resolve_expression(query, allow_joins=True)  # type: ignore[union-attr,return-value]
 
     def contribute_to_class(
         self,

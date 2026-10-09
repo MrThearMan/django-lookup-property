@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 from copy import deepcopy
+from dataclasses import dataclass
 from functools import cached_property
 from typing import TYPE_CHECKING
 
@@ -11,22 +12,22 @@ from django.db.models import Q, sql
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.expressions import BaseExpression, Combinable, NegatedExpression, ResolvedOuterRef
 from django.db.models.sql import Query
+from django.db.models.sql.datastructures import Join
 from django.utils.hashable import make_hashable
 
-from .typing import LOOKUP_PREFIX, Sentinel, cast
+from .typing import LOOKUP_PREFIX, SUBQUERY_VALUE, Sentinel, cast
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Mapping
 
     from django.db.backends.base.base import BaseDatabaseWrapper
     from django.db.models.expressions import Col
     from django.db.models.lookups import Lookup, Transform
     from django.db.models.sql.compiler import SQLCompiler
-    from django.db.models.sql.datastructures import Join
     from django.db.models.sql.where import WhereNode
 
     from .field import LookupPropertyField
-    from .typing import Any, Callable, ConvertFunc, Expr, ExpressionKind
+    from .typing import Any, ConvertFunc, Expr, ExpressionKind
 
 __all__ = [
     "L",
@@ -35,8 +36,9 @@ __all__ = [
 
 
 class LookupPropertyCol(models.Expression):
-    def __init__(self, target_field: LookupPropertyField) -> None:
+    def __init__(self, target_field: LookupPropertyField, alias: str | None = None) -> None:
         self.target = target_field
+        self.alias = alias
         super().__init__()
 
     def __repr__(self) -> str:
@@ -45,10 +47,6 @@ class LookupPropertyCol(models.Expression):
     @property
     def model(self) -> type[models.Model]:
         return self.target.model
-
-    @property
-    def alias(self) -> str:
-        return self.target.model._meta.db_table
 
     @property
     def expression(self) -> Expr:
@@ -70,30 +68,13 @@ class LookupPropertyCol(models.Expression):
     def get_transform(self, name: str) -> type[Transform] | None:
         return self.target.get_transform(name)
 
-    def _resolve_joined_lookup(self, query: sql.Query) -> Expr:
-        try:
-            join: Join = query.alias_map[self.model._meta.db_table]  # type: ignore[assignment]
-        except KeyError:
-            # Lookup property is referenced with an OuterRef in a Subquery.
-            return self.resolved_target_expression  # type: ignore[return-value]
-
-        table_name: str = join.join_field.name  # type: ignore[union-attr,attr-defined]
-        return extend_expression_to_joined_table(self.expression, table_name)
+    def relabeled_clone(self, change_map: Mapping[str, str]) -> LookupPropertyCol:
+        alias = self.alias if self.alias is None else change_map.get(self.alias, self.alias)
+        return self.__class__(self.target, alias)
 
     def as_sql(self, compiler: SQLCompiler, connection: BaseDatabaseWrapper) -> tuple[str, Any]:
-        expression = self.expression
-        if self.model != compiler.query.model:
-            expression = self._resolve_joined_lookup(compiler.query)
-
-        resolved: Col | WhereNode | BaseExpression
-        resolved = expression.resolve_expression(compiler.query)  # type: ignore[union-attr,assignment]
-
-        vendor_impl: Callable[[SQLCompiler, BaseDatabaseWrapper], tuple[str, Any]] | None
-        vendor_impl = getattr(resolved, f"as_{connection.vendor}", None)
-        if vendor_impl is not None:
-            return vendor_impl(compiler, connection)  # type: ignore[no-any-return]
-
-        return resolved.as_sql(compiler, connection)
+        resolved = self.target.resolve_for_alias(self.alias, compiler.query)
+        return compiler.compile(resolved)  # type: ignore[arg-type]
 
     @cached_property
     def convert_value(self) -> ConvertFunc:
@@ -284,6 +265,38 @@ class L(Combinable):
             break
 
         return field, lookup_parts, joined_tables
+
+
+@dataclass(frozen=True, slots=True)
+class JoinInfo:
+    joins: bool
+    """Does the expression need any joins?"""
+    multi_valued: bool
+    """Does the expression need joins to multi-valued relations? These can return multiple rows."""
+    aggregate: bool
+    """Does the expression contain an aggregate?"""
+
+
+def analyze_joins(model: type[models.Model], expression: Expr) -> JoinInfo:
+    """Find out which joins the expression needs by resolving it against an empty query."""
+    query = Query(model)
+    resolved: Any = expression.resolve_expression(query, allow_joins=True)  # type: ignore[union-attr]
+    joins = [table for table in query.alias_map.values() if isinstance(table, Join)]
+    return JoinInfo(
+        joins=bool(joins),
+        multi_valued=any(join.join_field.one_to_many or join.join_field.many_to_many for join in joins),  # type: ignore[attr-defined]
+        aggregate=bool(resolved.contains_aggregate),
+    )
+
+
+def correlated_subquery(model: type[models.Model], expression: Expr) -> models.Subquery:
+    """Evaluate the expression in a subquery for the row with the same primary key in the outer query."""
+    queryset = (
+        model._base_manager.filter(pk=models.OuterRef("pk"))
+        .annotate(**{SUBQUERY_VALUE: expression})
+        .values(SUBQUERY_VALUE)[:1]
+    )
+    return models.Subquery(queryset)
 
 
 def expression_has_output_field(expression: Expr) -> bool:
