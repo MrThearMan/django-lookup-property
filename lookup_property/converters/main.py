@@ -20,14 +20,10 @@ def query_expression_ast_module(expression: Expr, function_name: str, state: Sta
 
 
 def ast_to_module(function_name: str, return_value: ast.AST, state: State) -> ast.Module:
-    function_body: list[ast.Import | ast.Return | ast.If | ast.Try] = [
+    function_body: list[ast.Import | ast.Return] = [
         ast.Import(names=[ast.alias(name=import_name)]) for import_name in state.imports
     ]
-
-    if isinstance(return_value, ast.If | ast.Try):  # pragma: no cover
-        function_body.append(return_value)
-    else:
-        function_body.append(ast.Return(value=return_value))
+    function_body.append(ast.Return(value=return_value))
 
     module = ast.Module(
         body=[
