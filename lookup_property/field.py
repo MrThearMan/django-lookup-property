@@ -6,7 +6,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, Self, Unpack, cast, overload
 
 from django.db import models
-from django.db.models import ForeignObjectRel, sql
+from django.db.models import sql
 
 from .converters.main import ast_module_to_function, query_expression_ast_module
 from .expressions import (
@@ -19,11 +19,8 @@ from .expressions import (
 from .typing import LOOKUP_PREFIX, Sentinel, State, StateArgs
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Callable
     from types import FunctionType
-
-    from django.db.models.fields.related import ForeignObject, ManyToManyField
-    from django.db.models.query_utils import PathInfo
 
     from .typing import Expr
 
@@ -125,8 +122,6 @@ class LookupPropertyField(models.Field):
     def __init__(self, model: type[models.Model], target_property: LookupPropertyDescriptor) -> None:
         self.model = model  # Required by `LookupPropertyCol` to resolve related lookups
         self.target_property = target_property
-        if target_property.state.joins:
-            self.path_infos = LazyPathInfo(self, joins=target_property.state.joins)
         self.join_infos: dict[tuple[type[models.Model], tuple[str, ...]], JoinInfo] = {}
 
         super().__init__()
@@ -195,37 +190,3 @@ class LookupPropertyField(models.Field):
     ) -> None:
         # Register property on a concrete implementation of an abstract model
         self.target_property.contribute_to_class(cls, name, private_only=private_only)
-
-
-class LazyPathInfo:
-    """
-    Class used to `trick django.db.models.sql.query.Query.names_to_path`
-    into thinking that a LookupPropertyField is a related field, like a
-    ForeignKey or OneToOneField. Computes a list of PathInfo objects, which
-    will the be used by `django.db.models.sql.query.JoinPromoter` to add
-    sql joins to the query, e.g., for `queryset.count()`.
-    """
-
-    def __init__(self, field: LookupPropertyField, *, joins: list[str]) -> None:
-        self.field = field
-        self.joins = joins
-
-    def __iter__(self) -> Iterator[PathInfo]:
-        return iter([self[0]])
-
-    def __getitem__(self, item: int) -> PathInfo:
-        return self.get_path_info[item]
-
-    @cached_property
-    def get_path_info(self) -> list[PathInfo]:
-        path_info: list[PathInfo] = []
-        for join in self.joins:
-            rel_or_field: ForeignObjectRel | ForeignObject | ManyToManyField
-            rel_or_field = self.field.model._meta.get_field(join)  # type: ignore[assignment]
-
-            if isinstance(rel_or_field, ForeignObjectRel):
-                path_info.extend(rel_or_field.field.get_reverse_path_info())
-            else:
-                path_info.extend(rel_or_field.get_path_info())
-
-        return path_info

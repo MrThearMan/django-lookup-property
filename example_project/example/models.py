@@ -88,19 +88,19 @@ class Example(models.Model):
             output_field=models.CharField(),
         )
 
-    @lookup_property(joins=["question"])
+    @lookup_property
     def forward_one_to_one() -> int:
         return models.F("question__pk")  # type: ignore[return-value]
 
-    @lookup_property(joins=["thing"])
+    @lookup_property
     def reverse_one_to_one() -> int:
         return models.F("thing__pk")  # type: ignore[return-value]
 
-    @lookup_property(joins=["other"])
+    @lookup_property
     def forward_many_to_one() -> int:
         return models.F("other__pk")  # type: ignore[return-value]
 
-    @lookup_property(joins=["totals"], skip_codegen=True)
+    @lookup_property(skip_codegen=True)
     def reverse_one_to_many() -> int | None:
         return models.F("totals__pk")  # type: ignore[return-value]
 
@@ -108,7 +108,7 @@ class Example(models.Model):
     def _(self) -> int | None:
         return self.totals.values_list("pk", flat=True).first()
 
-    @lookup_property(joins=["children"], skip_codegen=True)
+    @lookup_property(skip_codegen=True)
     def forward_many_to_many() -> int | None:
         return models.F("children__pk")  # type: ignore[return-value]
 
@@ -116,7 +116,7 @@ class Example(models.Model):
     def _(self) -> int | None:
         return self.children.values_list("pk", flat=True).first()
 
-    @lookup_property(joins=["parts"], skip_codegen=True)
+    @lookup_property(skip_codegen=True)
     def reverse_many_to_many() -> int | None:
         return models.F("parts__pk")  # type: ignore[return-value]
 
@@ -124,7 +124,7 @@ class Example(models.Model):
     def _(self) -> int | None:
         return self.parts.values_list("pk", flat=True).first()
 
-    @lookup_property(joins=["thing"])
+    @lookup_property
     def double_join() -> int | None:
         return models.F("thing__far__pk")  # type: ignore[return-value]
 
@@ -358,7 +358,7 @@ class Example(models.Model):
     def _(self) -> str:
         return "foo" if self.totals.filter(number=1).exists() else "bar"
 
-    @lookup_property(joins=["parts"], skip_codegen=True)
+    @lookup_property(skip_codegen=True)
     def case_6() -> str:
         return models.Case(  # type: ignore[return-value]
             models.When(
@@ -373,7 +373,7 @@ class Example(models.Model):
     def _(self) -> str:
         return "foo" if self.parts.filter(far__number=1).exists() else "bar"
 
-    @lookup_property(joins=["parts"], skip_codegen=True)
+    @lookup_property(skip_codegen=True)
     def case_7() -> str:
         return models.Case(  # type: ignore[return-value]
             models.When(
@@ -388,7 +388,7 @@ class Example(models.Model):
     def _(self) -> str:
         return "foo" if self.parts.filter(number=1, far__number=1).exists() else "bar"
 
-    @lookup_property(joins=["parts"], skip_codegen=True, concrete=True)
+    @lookup_property(skip_codegen=True, concrete=True)
     def case_8() -> str:
         return models.Case(  # type: ignore[return-value]
             models.When(

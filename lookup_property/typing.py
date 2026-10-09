@@ -75,7 +75,6 @@ class RandomKeyDict(dict[str, Any]):
 
 @dataclass
 class State:
-    joins: list[str] = field(default_factory=list)
     use_tz: bool = field(default_factory=lambda: settings.USE_TZ)
     skip_codegen: bool = False
     concrete: bool = False
@@ -86,7 +85,6 @@ class State:
 
 
 class StateArgs(TypedDict, total=False):
-    joins: list[str]
     skip_codegen: bool
     use_tz: bool
     concrete: bool

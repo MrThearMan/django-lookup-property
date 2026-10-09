@@ -116,9 +116,8 @@ at class creation time, and the override is only added to the class after it.
 
 ## Related models
 
-Lookup properties can also reference related models. While some expressions _might_
-work without any additional setup in some cases, it's recommended to specify the
-`joins` in for these lookup properties manually.
+Lookup properties can also reference related models. The necessary joins are added
+to the query automatically.
 
 ```python
 from lookup_property import lookup_property
@@ -128,7 +127,7 @@ from django.db import models
 class Student(models.Model):
     ...
 
-    @lookup_property(joins=["classes"])
+    @lookup_property
     def number_of_classes(self):
         return models.Count("classes")
 
@@ -137,6 +136,21 @@ class Class(models.Model):
     students = models.ManyToManyField(Student, related_name="classes")
     ...
 ```
+
+If the expression references a multi-valued relation (a reverse foreign key or a many-to-many
+relation) without aggregating it, the lookup property can have many values for one row.
+In this case:
+
+- Filtering with the lookup property matches a row if _any_ of the related rows match.
+  Excluding with it removes a row if any of the related rows match. This is the same as
+  how Django handles filtering across multi-valued relations.
+- Selecting the lookup property, e.g., by annotating it, gives _one_ of the values
+  without duplicating the row.
+
+It's recommended to use an aggregate or an `Exists` subquery for these properties,
+so that the property has a single, well-defined value.
+
+> The `joins` argument of earlier versions is deprecated and does nothing.
 
 ## Concrete properties
 

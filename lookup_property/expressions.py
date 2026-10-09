@@ -293,17 +293,6 @@ class L(Combinable):
                 field_name, lookup_parts = lookup_parts[0], lookup_parts[1:]
                 continue
 
-            # If the field is a lookup property, and joins have been defined for it,
-            # join those tables to the query object before returning the field,
-            # but only if the lookup was found from a related model.
-            if joined_tables and isinstance(field.target_property.state.joins, list):
-                tables: list[str] = [
-                    query.model._meta.get_field(join).related_model._meta.db_table  # type: ignore[union-attr]
-                    for join in field.target_property.state.joins
-                ]
-                for table in tables:
-                    query.join(query.base_table_class(table, table))
-
             break
 
         return field, lookup_parts, joined_tables
