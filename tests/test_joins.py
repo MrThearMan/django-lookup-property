@@ -376,3 +376,20 @@ def test_joins__pattern__admin_list_filter(pattern_data):
     assert names(qs.filter(**{field_path: pattern_data["far"].pk})) == ["e1"]
     assert names(qs.filter(**{f"{field_path}__isnull": True})) == ["e3"]
 
+
+def test_joins__exclude__null_values__subquery(pattern_data):
+    # 'subquery' is NULL for 'e3', since it has no thing.
+    assert names(Example.objects.exclude(L(subquery=30))) == ["e1", "e3"]
+    assert names(Example.objects.filter(L(subquery=30))) == ["e2"]
+
+
+def test_joins__filter__subquery_evaluated_once(pattern_data, query_counter):
+    list(Example.objects.filter(L(subquery=30)).values("pk"))
+    assert query_counter[0].count("example_thing") == 1
+
+
+def test_joins__filter__column_null_check(pattern_data, query_counter):
+    # Expressions without subqueries are checked with `IS NOT NULL`, so that indexes can still be used.
+    list(Example.objects.filter(L(double_join=pattern_data["far"].pk)).values("pk"))
+    assert "IS NOT NULL" in query_counter[0]
+    assert "COALESCE" not in query_counter[0]
