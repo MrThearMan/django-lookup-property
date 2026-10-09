@@ -289,3 +289,90 @@ def test_joins__deprecated_argument():
         def foo() -> int:
             return F("thing__pk")  # type: ignore[return-value]
 
+
+# Patterns from real-world usage.
+
+
+def assert_matches_python(qs: QuerySet[Any], name: str) -> None:
+    """Check that the lookup property gives the same value in the database and in python for all rows."""
+    rows = list(qs.annotate(_value=L(name)).order_by("pk"))
+    assert rows
+    for row in rows:
+        assert row._value == getattr(row, name), row
+
+    for value in {row._value for row in rows}:
+        expected = sorted(row.pk for row in rows if row._value == value)
+        assert sorted(qs.filter(L(**{name: value})).values_list("pk", flat=True)) == expected
+        assert sorted(qs.exclude(L(**{name: value})).values_list("pk", flat=True)) == sorted(
+            row.pk for row in rows if row._value != value
+        )
+
+
+@pytest.fixture
+def pattern_data(data) -> dict[str, Any]:
+    Thing.objects.filter(pk=data["t1"].pk).update(number=5)
+    Thing.objects.filter(pk=data["t2"].pk).update(number=30)
+    return data
+
+
+def test_joins__pattern__nested_lookup_with_f_value(pattern_data):
+    # e.g. `When(L(allocations__gte=F("applied_reservations_per_week")), ...)`
+    qs = Example.objects.filter(first_name__in=["e1", "e2", "e3"])
+    assert_matches_python(qs, "subquery_at_least_age")
+    assert names(qs.filter(L(subquery_at_least_age=True))) == ["e2"]
+
+
+def test_joins__pattern__nested_lookup_with_f_value__through_relation(pattern_data):
+    assert list(Thing.objects.filter(L(example__subquery_at_least_age=True))) == [pattern_data["t2"]]
+
+
+def test_joins__pattern__lookup_aliased_in_exists(pattern_data):
+    # e.g. `Exists(Model.objects.alias(status=L("status")).filter(status__in=[...]))`
+    qs = Example.objects.filter(first_name__in=["e1", "e2", "e3"])
+    assert_matches_python(qs, "has_thing_in_range")
+    assert names(qs.filter(L(has_thing_in_range=True))) == ["e2"]
+
+
+def test_joins__pattern__negated_lookup_through_relation_in_case(pattern_data):
+    # e.g. `When(~Q(L(application_section__status__in=[...])), ...)`
+    # 'case_6' references a multi-valued relation, so this is checked with a subquery inside the condition.
+    assert_matches_python(Thing.objects.all(), "example_not_case_6_foo")
+    assert list(Thing.objects.filter(L(example_not_case_6_foo=True))) == [pattern_data["t2"]]
+    assert list(Far.objects.filter(L(thing__example_not_case_6_foo=False))) == [pattern_data["far"]]
+
+
+def test_joins__pattern__order_by_through_relation(pattern_data):
+    # e.g. `qs.order_by(L("reservation_unit_option__application_section__status").asc())`
+    qs = Thing.objects.filter(pk__in=[pattern_data["t1"].pk, pattern_data["t2"].pk])
+    expected = sorted(qs, key=lambda thing: thing.example.double_join, reverse=True)
+    assert list(qs.order_by(L("example__double_join").desc())) == expected
+
+
+def test_joins__pattern__alias_case_with_lookups_through_relations(pattern_data):
+    # e.g. `qs.distinct().alias(state=Case(When(~L(rel__prop__contains=[...])), ...)).filter(state__in=[...])`
+    qs = (
+        Thing.objects
+        .distinct()
+        .alias(
+            state=Case(
+                When(~L(example__case_6="foo"), then=Value("not foo")),
+                When(L(example__double_join=F("far_id")), then=Value("own far")),
+                default=Value("other"),
+            ),
+        )
+        .order_by("pk")
+    )
+    assert list(qs.filter(state__in=["not foo"])) == [pattern_data["t2"]]
+    assert list(qs.filter(state__in=["own far"])) == [pattern_data["t1"]]
+    assert list(qs.filter(state__in=["other"])) == []
+
+
+def test_joins__pattern__admin_list_filter(pattern_data):
+    # e.g. `list_filter = ["_lookup_property_status"]` in a ModelAdmin, which uses `AllValuesFieldListFilter`.
+    qs = Example.objects.filter(first_name__in=["e1", "e2", "e3"])
+    field_path = "_lookup_property_double_join"
+    values = list(qs.distinct().order_by(field_path).values_list(field_path, flat=True))
+    assert values == [None, *sorted([pattern_data["far"].pk, pattern_data["t2"].far_id])]
+    assert names(qs.filter(**{field_path: pattern_data["far"].pk})) == ["e1"]
+    assert names(qs.filter(**{f"{field_path}__isnull": True})) == ["e3"]
+

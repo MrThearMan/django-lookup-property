@@ -444,6 +444,32 @@ class Example(models.Model):
             output_field=models.CharField(),
         )
 
+    @lookup_property(skip_codegen=True)
+    def subquery_at_least_age() -> bool:
+        return models.Case(  # type: ignore[return-value]
+            models.When(
+                L(subquery__gte=models.F("age")),
+                then=models.Value(True),  # noqa: FBT003
+            ),
+            default=models.Value(False),  # noqa: FBT003
+            output_field=models.BooleanField(),
+        )
+
+    @subquery_at_least_age.override
+    def _(self) -> bool:
+        number = Thing.objects.filter(example=self).values_list("number", flat=True).first()
+        return number is not None and self.age is not None and number >= self.age
+
+    @lookup_property(skip_codegen=True)
+    def has_thing_in_range() -> bool:
+        return models.Exists(  # type: ignore[return-value]
+            Thing.objects.alias(in_range=L("number_in_range")).filter(example=models.OuterRef("pk"), in_range=True),
+        )
+
+    @has_thing_in_range.override
+    def _(self) -> bool:
+        return Thing.objects.filter(example=self, number__gt=10).exists()
+
     @lookup_property
     def cast_str() -> str:
         return functions.Cast("age", output_field=models.CharField())  # type: ignore[return-value]
@@ -882,6 +908,21 @@ class Thing(models.Model):
     @lookup_property
     def number_in_range() -> bool:
         return models.Q(number__gt=10)  # type: ignore[return-value]
+
+    @lookup_property(skip_codegen=True)
+    def example_not_case_6_foo() -> bool:
+        return models.Case(  # type: ignore[return-value]
+            models.When(
+                ~models.Q(L(example__case_6="foo")),
+                then=models.Value(True),  # noqa: FBT003
+            ),
+            default=models.Value(False),  # noqa: FBT003
+            output_field=models.BooleanField(),
+        )
+
+    @example_not_case_6_foo.override
+    def _(self) -> bool:
+        return self.example.case_6 != "foo"
 
 
 class Total(models.Model):
