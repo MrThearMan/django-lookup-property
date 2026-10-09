@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import textwrap
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Self, Unpack, cast, overload
 
@@ -73,7 +74,7 @@ class LookupPropertyDescriptor[R]:
     def override(self, func: Callable[[Any], R]) -> None:
         """Override generated function with a custom one."""
         self.func = func
-        self.module = ast.parse(inspect.cleandoc(inspect.getsource(func)))
+        self.module = ast.parse(textwrap.dedent(inspect.getsource(func)))
 
     def generate_func(self) -> None:
         """Generate the python function from the decorated function return expression."""

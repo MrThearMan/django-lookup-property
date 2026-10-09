@@ -262,6 +262,20 @@ def test_lookup_property__override__skips_codegen():
     assert descriptor.func(Example()) == "override"
 
 
+def test_lookup_property__override__without_decorator():
+    def foo() -> str:
+        return F("first_name")  # type: ignore[return-value]
+
+    def bar(self: Example) -> str:
+        return "bar"
+
+    descriptor = lookup_property(foo)
+    descriptor.override(bar)
+
+    assert descriptor.func is bar
+    assert descriptor.func_source == "def bar(self: Example) -> str:\n    return 'bar'"
+
+
 def test_random_arg_name():
     # The test plugin replaces 'random_arg_name' for the whole test run, so call the original.
     name = random_arg_name_patch.temp_original()
