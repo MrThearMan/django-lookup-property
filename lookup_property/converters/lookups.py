@@ -23,7 +23,7 @@ __all__ = [
 
 
 @expression_to_ast.register
-def _(expression: L, state: State) -> ast.expr:  # pragma: no cover
+def _(expression: L, state: State) -> ast.expr:
     """
     L("foo") -> self.foo
     L(foo="bar") -> self.foo == "bar"

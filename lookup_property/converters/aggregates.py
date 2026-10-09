@@ -43,7 +43,7 @@ def _(
     )
 
 
-try:  # pragma: no cover
+try:
     from django.contrib.postgres import aggregates as pg_aggregates
 
     @expression_to_ast.register

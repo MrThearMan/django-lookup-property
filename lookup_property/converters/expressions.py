@@ -110,7 +110,7 @@ def _(expression: CombinedExpression, state: State) -> ast.BinOp | ast.Compare:
 
     bin_op = _BIN_OP_MAP.get(expression.connector)
 
-    if bin_op is None:  # pragma: no cover
+    if bin_op is None:
         msg = f"No implementation for connector '{expression.connector}'."
         raise ValueError(msg)
 

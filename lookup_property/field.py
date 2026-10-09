@@ -78,7 +78,7 @@ class LookupPropertyDescriptor[R]:
 
     def override(self, func: Callable[[Any], R]) -> None:
         """Override generated function with a custom one."""
-        if not self.state.skip_codegen:  # pragma: no cover
+        if not self.state.skip_codegen:
             msg = "Override is only allowed when lookup property was initialized with `skip_codegen=True`"
             raise ValueError(msg)
 
@@ -91,7 +91,7 @@ class LookupPropertyDescriptor[R]:
         name: str,
         private_only: bool = False,  # noqa: FBT001, FBT002
     ) -> None:
-        if not hasattr(self, "func"):  # pragma: no cover
+        if not hasattr(self, "func"):
             msg = f"Must set function for lookup property with '@{self.__name__}.override'."
             raise ValueError(msg)
 

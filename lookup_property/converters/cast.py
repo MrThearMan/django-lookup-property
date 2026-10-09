@@ -126,7 +126,7 @@ def _(field: models.JSONField, state: State) -> ast.Attribute:
     )
 
 
-try:  # pragma: no cover
+try:
     from django.contrib.postgres.fields import ArrayField, HStoreField
 
     @convert_django_field.register

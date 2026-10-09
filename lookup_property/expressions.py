@@ -47,7 +47,7 @@ class LookupPropertyCol(models.Expression):
         return self.target.model
 
     @property
-    def alias(self) -> str:  # pragma: no cover
+    def alias(self) -> str:
         return self.target.model._meta.db_table
 
     @property
@@ -68,7 +68,7 @@ class LookupPropertyCol(models.Expression):
         return self.target.get_lookup(name)
 
     def get_transform(self, name: str) -> type[Transform] | None:
-        return self.target.get_transform(name)  # pragma: no cover
+        return self.target.get_transform(name)
 
     def _resolve_joined_lookup(self, query: sql.Query) -> Expr:
         try:
@@ -96,7 +96,7 @@ class LookupPropertyCol(models.Expression):
         return resolved.as_sql(compiler, connection)
 
     @cached_property
-    def convert_value(self) -> ConvertFunc:  # pragma: no cover
+    def convert_value(self) -> ConvertFunc:
         if expression_has_output_field(self.expression) and hasattr(self.expression, "convert_value"):
             return self.expression.convert_value
         return super().convert_value
@@ -121,18 +121,18 @@ class L(Combinable):
     def __init__(self, __ref: str | models.Subquery = "", /, **kwargs: Any) -> None:
         self.conditional = bool(kwargs)  # See. `django.db.models.sql.query.Query.build_filter`
 
-        if __ref:  # pragma: no cover
+        if __ref:
             if kwargs:
                 msg = "Either one positional or keyword argument can be given."
                 raise ValueError(msg)
 
             self.lookup = __ref
 
-        elif len(kwargs) > 1:  # pragma: no cover
+        elif len(kwargs) > 1:
             msg = "Multiple keyword arguments are not supported."
             raise ValueError(msg)
 
-        elif not kwargs:  # pragma: no cover
+        elif not kwargs:
             msg = "Either one positional or keyword argument must be given."
             raise ValueError(msg)
 
@@ -286,7 +286,7 @@ class L(Combinable):
         return field, lookup_parts, joined_tables
 
 
-def expression_has_output_field(expression: Expr) -> bool:  # pragma: no cover
+def expression_has_output_field(expression: Expr) -> bool:
     # Check whether the 'output_field' of the expression can be resolved.
     # This might fail, and does fail for expressions like Trunc if the 'output_field'
     # is not explicitly given (e.g. 'Trunc(F("foo"))' will end up using 'BaseExpression.output_field',
