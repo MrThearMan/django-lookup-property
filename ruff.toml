@@ -150,7 +150,7 @@ known-third-party = [
     "django",
 ]
 known-first-party = [
-    "query_optimizer",
+    "lookup_property",
 ]
 
 [lint.flake8-import-conventions]
