@@ -3,14 +3,14 @@ from __future__ import annotations
 import ast
 import inspect
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Generic, Unpack
+from typing import TYPE_CHECKING, Any, Unpack
 
 from django.db import models
 from django.db.models import ForeignObjectRel
 
 from .converters.main import ast_module_to_function, query_expression_ast_module
 from .expressions import LookupPropertyCol
-from .typing import LOOKUP_PREFIX, R, Sentinel, State, StateArgs
+from .typing import LOOKUP_PREFIX, Sentinel, State, StateArgs
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -28,7 +28,7 @@ __all__ = [
 ]
 
 
-class LookupPropertyDescriptor(Generic[R]):
+class LookupPropertyDescriptor[R]:
     """Descriptor for accessing a LookupPropertyField on the model."""
 
     def __init__(self, func: FunctionType, /, **kwargs: Unpack[StateArgs]) -> None:

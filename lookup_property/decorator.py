@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Unpack, overload
 from .field import LookupPropertyDescriptor
 
 if TYPE_CHECKING:
-    from .typing import Callable, R, StateArgs
+    from .typing import Callable, StateArgs
 
 __all__ = [
     "lookup_property",
@@ -13,14 +13,14 @@ __all__ = [
 
 
 @overload
-def lookup_property(__func: Callable[[], R], /) -> LookupPropertyDescriptor[R]: ...
+def lookup_property[R](__func: Callable[[], R], /) -> LookupPropertyDescriptor[R]: ...
 
 
 @overload
-def lookup_property(**kwargs: Unpack[StateArgs]) -> Callable[[Callable[[], R]], LookupPropertyDescriptor[R]]: ...
+def lookup_property[R](**kwargs: Unpack[StateArgs]) -> Callable[[Callable[[], R]], LookupPropertyDescriptor[R]]: ...
 
 
-def lookup_property(
+def lookup_property[R](
     __func: Callable[[], R] | None = None,
     /,
     **kwargs: Unpack[StateArgs],

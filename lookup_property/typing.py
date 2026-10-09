@@ -5,19 +5,7 @@ import string
 from collections.abc import Callable, Collection, Generator, Iterable
 from dataclasses import dataclass, field
 from types import FunctionType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Concatenate,
-    Literal,
-    ParamSpec,
-    Protocol,
-    Self,
-    TypeAlias,
-    TypedDict,
-    TypeVar,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Concatenate, Literal, Protocol, Self, TypedDict, TypeVar, cast
 
 from django.conf import settings
 from django.db import models
@@ -40,9 +28,7 @@ __all__ = [
     "Iterable",
     "Literal",
     "ModelMethod",
-    "ParamSpec",
     "Protocol",
-    "R",
     "Self",
     "State",
     "StateArgs",
@@ -52,9 +38,8 @@ __all__ = [
 ]
 
 
-R = TypeVar("R")
 TModel = TypeVar("TModel", bound=models.Model)
-Expr: TypeAlias = BaseExpression | Combinable | models.Q
+type Expr = BaseExpression | Combinable | models.Q
 
 LOOKUP_PREFIX = "_lookup_property_"
 
