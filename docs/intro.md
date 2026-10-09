@@ -1,3 +1,7 @@
+---
+description: "Why lookup properties exist and how they work, with a simple use case."
+---
+
 # Introduction
 
 ## Simple use case

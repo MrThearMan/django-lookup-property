@@ -1,3 +1,7 @@
+---
+description: "Django Lookup Property: Django model properties that are also lookup expressions."
+---
+
 # Django Lookup Property
 
 [![Coverage Status][coverage-badge]][coverage]
