@@ -27,18 +27,15 @@ __all__ = [
     "Generator",
     "Iterable",
     "Literal",
-    "ModelMethod",
     "Protocol",
     "Self",
     "State",
     "StateArgs",
-    "TModel",
     "TypeVar",
     "cast",
 ]
 
 
-TModel = TypeVar("TModel", bound=models.Model)
 type Expr = BaseExpression | Combinable | models.Q
 
 LOOKUP_PREFIX = "_lookup_property_"
@@ -55,7 +52,6 @@ class ExpressionKind(Protocol):
     ) -> ExpressionKind: ...
 
 
-ModelMethod = Callable[[TModel], Expr] | Callable[[], Expr]
 ConvertFunc = Callable[[Any, BaseExpression, BaseDatabaseWrapper], Any]
 
 Sentinel = object()
