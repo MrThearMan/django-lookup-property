@@ -1,10 +1,14 @@
+import re
+
+import pytest
 from django.db.models import F, Q
 from django.db.models.expressions import CombinedExpression, NegatedExpression
 from django.db.models.functions import Upper
 
 from example_project.example.models import Example
-from lookup_property import L
+from lookup_property import L, lookup_property
 from lookup_property.expressions import extend_expression_to_joined_table
+from tests.plugins import random_arg_name_patch
 
 
 def test_lookup_property__repr():
@@ -195,3 +199,64 @@ def test_extend_expression_to_joined_table__value_is_func():
     q2 = extend_expression_to_joined_table(q1, "example")
 
     assert str(q2.children) == "[L(example__foo=Upper(F(example__bar)))]"
+
+
+def test_extend_expression_to_joined_table__l_ref():
+    l2 = extend_expression_to_joined_table(L("foo"), "example")
+
+    assert l2 == L("example__foo")
+
+
+def test_lookup_property__col_alias():
+    assert Example.full_name.field.cached_col.alias == Example._meta.db_table
+
+
+def test_lookup_property__col_get_transform():
+    assert Example.full_name.field.cached_col.get_transform("foo") is None
+
+
+def test_lookup_property__col_convert_value__no_output_field():
+    col = Example.f_ref.field.cached_col
+    assert col.convert_value == col._convert_value_noop
+
+
+def test_l__positional_and_keyword_argument():
+    msg = re.escape("Either one positional or keyword argument can be given.")
+    with pytest.raises(ValueError, match=msg):
+        L("foo", bar="baz")
+
+
+def test_l__multiple_keyword_arguments():
+    msg = re.escape("Multiple keyword arguments are not supported.")
+    with pytest.raises(ValueError, match=msg):
+        L(foo="bar", fizz="buzz")
+
+
+def test_l__no_arguments():
+    msg = re.escape("Either one positional or keyword argument must be given.")
+    with pytest.raises(ValueError, match=msg):
+        L()
+
+
+def test_lookup_property__override__without_skip_codegen():
+    msg = re.escape("Override is only allowed when lookup property was initialized with `skip_codegen=True`")
+    with pytest.raises(ValueError, match=msg):
+        Example.full_name.override(lambda self: "foo")
+
+
+def test_lookup_property__contribute_to_class__no_override():
+    def foo() -> str:
+        return F("first_name")
+
+    descriptor = lookup_property(skip_codegen=True)(foo)
+
+    msg = re.escape("Must set function for lookup property with '@foo.override'.")
+    with pytest.raises(ValueError, match=msg):
+        descriptor.contribute_to_class(Example, "foo")
+
+
+def test_random_arg_name():
+    # The test plugin replaces 'random_arg_name' for the whole test run, so call the original.
+    name = random_arg_name_patch.temp_original()
+
+    assert re.fullmatch(r"[a-z]{20}", name)

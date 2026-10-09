@@ -10,15 +10,13 @@ __all__ = [
 
 
 class RegisterFunc[**P, T, Str: str](Protocol):
-    def __call__(self, *, lookup: Str | None) -> Callable[[Callable[P, T]], Callable[P, T]]:
-        pass
+    def __call__(self, *, lookup: Str | None) -> Callable[[Callable[P, T]], Callable[P, T]]: ...
 
 
 class Dispatch[**P, T, Str: str](Protocol):
     register: RegisterFunc[P, T, Str]
 
-    def __call__(self, lookup: Str, *args: P.args, **kwargs: P.kwargs) -> T:
-        pass
+    def __call__(self, lookup: Str, *args: P.args, **kwargs: P.kwargs) -> T: ...
 
 
 def lookup_singledispatch[Str: str, **P, T](func: Callable[Concatenate[Str, P], T]) -> Dispatch[P, T, Str]:

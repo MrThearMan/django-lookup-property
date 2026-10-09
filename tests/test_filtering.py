@@ -98,6 +98,16 @@ def test_filter_by_lookup_property__subquery__outer_ref__case():
     assert Example.objects.filter(parts__in=L(models.Subquery(subquery))).count() == 2
 
 
+def test_filter_by_lookup_property__subquery__outer_ref__case__multiple_conditions():
+    example_1 = ExampleFactory.create()
+    example_2 = ExampleFactory.create()
+    PartFactory.create(name="foo", examples=[example_1, example_2], far__number=1)
+
+    # The OuterRef must be the first condition in the subquery.
+    subquery = Part.objects.filter(name=models.OuterRef("case_6")).filter(far__number=1).values("pk")
+    assert Example.objects.filter(parts__in=L(models.Subquery(subquery))).count() == 2
+
+
 def test_filter_by_lookup_property__subquery__exists():
     other = OtherFactory.create()
     ExampleFactory.create(first_name="a", last_name="a", other=other)
