@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import uuid
 from decimal import Decimal
 from typing import Any
@@ -129,51 +129,51 @@ class Example(models.Model):
         return models.F("thing__far__pk")  # type: ignore[return-value]
 
     @lookup_property
-    def now() -> datetime.datetime:
+    def now() -> dt.datetime:
         return functions.Now()  # type: ignore[return-value]
 
     @lookup_property
-    def trunc() -> datetime.date:
+    def trunc() -> dt.date:
         return functions.Trunc("timestamp", "year")  # type: ignore[return-value]
 
     @lookup_property
-    def trunc_year() -> datetime.date:
+    def trunc_year() -> dt.date:
         return functions.TruncYear("timestamp")  # type: ignore[return-value]
 
     @lookup_property
-    def trunc_month() -> datetime.date:
+    def trunc_month() -> dt.date:
         return functions.TruncMonth("timestamp")  # type: ignore[return-value]
 
     @lookup_property
-    def trunc_day() -> datetime.date:
+    def trunc_day() -> dt.date:
         return functions.TruncDay("timestamp")  # type: ignore[return-value]
 
     @lookup_property
-    def trunc_hour() -> datetime.date:
+    def trunc_hour() -> dt.date:
         return functions.TruncHour("timestamp")  # type: ignore[return-value]
 
     @lookup_property
-    def trunc_minute() -> datetime.date:
+    def trunc_minute() -> dt.date:
         return functions.TruncMinute("timestamp")  # type: ignore[return-value]
 
     @lookup_property
-    def trunc_second() -> datetime.date:
+    def trunc_second() -> dt.date:
         return functions.TruncSecond("timestamp")  # type: ignore[return-value]
 
     @lookup_property
-    def trunc_week() -> datetime.date:
+    def trunc_week() -> dt.date:
         return functions.TruncWeek("timestamp")  # type: ignore[return-value]
 
     @lookup_property
-    def trunc_quarter() -> datetime.date:
+    def trunc_quarter() -> dt.date:
         return functions.TruncQuarter("timestamp")  # type: ignore[return-value]
 
     @lookup_property
-    def trunc_date() -> datetime.date:
+    def trunc_date() -> dt.date:
         return functions.TruncDate("timestamp")  # type: ignore[return-value]
 
     @lookup_property
-    def trunc_time() -> datetime.time:
+    def trunc_time() -> dt.time:
         return functions.TruncTime("timestamp")  # type: ignore[return-value]
 
     @lookup_property
@@ -709,7 +709,7 @@ class Example(models.Model):
 
     @lookup_property
     def q_gt() -> bool:
-        return models.Q(timestamp__gt=datetime.datetime(2022, 1, 1, tzinfo=datetime.UTC))  # type: ignore[return-value]
+        return models.Q(timestamp__gt=dt.datetime(2022, 1, 1, tzinfo=dt.UTC))  # type: ignore[return-value]
 
     @lookup_property
     def q_lte() -> bool:
@@ -717,7 +717,7 @@ class Example(models.Model):
 
     @lookup_property
     def q_lt() -> bool:
-        return models.Q(timestamp__lt=datetime.datetime(2022, 1, 1, tzinfo=datetime.UTC))  # type: ignore[return-value]
+        return models.Q(timestamp__lt=dt.datetime(2022, 1, 1, tzinfo=dt.UTC))  # type: ignore[return-value]
 
     @lookup_property
     def q_in_list() -> bool:
@@ -763,8 +763,8 @@ class Example(models.Model):
     def q_range() -> bool:
         return models.Q(  # type: ignore[return-value]
             timestamp__range=(
-                datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC),
-                datetime.datetime(2022, 1, 1, tzinfo=datetime.UTC),
+                dt.datetime(2000, 1, 1, tzinfo=dt.UTC),
+                dt.datetime(2022, 1, 1, tzinfo=dt.UTC),
             ),
         )
 
